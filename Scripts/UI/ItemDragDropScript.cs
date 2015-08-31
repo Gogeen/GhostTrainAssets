@@ -2,36 +2,72 @@
 using System.Collections;
 
 public class ItemDragDropScript : MonoBehaviour {
-	public Transform lastSlot;
+	public Transform fromSlot;
+	public Camera uiCamera;
+	Vector3 onClickOffset = new Vector3();
 	void OnDragEnd()
 	{
-		WagonInventorySlot slot = transform.parent.parent.GetComponent<WagonInventorySlot> ();
-		Transform potentialSlot = transform.parent;
+		Transform potentialSlot = transform.parent.parent;
+		WagonInventoryUI wagonInventory = potentialSlot.parent.parent.GetComponent<WagonInventoryUI>();
 		transform.parent = null;
-		if (!slot.CanPut (GetComponent<Item> ().size)) {
-			Debug.Log ("slot is full");
-			transform.parent = lastSlot.GetComponent<UIDragDropContainer> ().reparentTarget;
-			GetComponent<UIDragDropItem> ().SendMessage ("OnDragDropRelease", lastSlot.gameObject);
+		if (!wagonInventory.CanPutInSlot (potentialSlot, GetComponent<Item> ().size)) {
+			PutInSlot(fromSlot);
 			return;
 		}
 		else
 		{
-			transform.parent = potentialSlot;
+			PutInSlot(potentialSlot);
 
 		}
 
 	}
+
+	IEnumerator ApplyClickOffset()
+	{
+		float timer = 0.2f;
+		while (timer > 0)
+		{
+			timer -= Time.unscaledDeltaTime;
+			transform.position += onClickOffset*5*Time.unscaledDeltaTime;
+			yield return null;
+		}
+	}
+	void OnDragStart()
+	{
+		StopCoroutine ("ApplyClickOffset");
+		StartCoroutine ("ApplyClickOffset");
+	}
+
+	void SetFromSlot()
+	{
+		fromSlot = GetCurrentSlot();
+	}
+
+	Transform GetCurrentSlot()
+	{
+		return transform.parent.parent;
+	}
 	
+	void PutInSlot(Transform slot)
+	{
+		if (slot.GetComponent<UIDragDropContainer> () == null)
+		{
+			PutInSlot(fromSlot);
+			return;
+		}
+		GetComponent<UIDragDropItem> ().SendMessage ("OnDragDropRelease", slot.gameObject);
+	}
+
 	void OnPress(bool isPressed)
 	{
 		if (isPressed)
 		{
-			lastSlot = transform.parent.parent;
-
+			onClickOffset = uiCamera.ScreenToWorldPoint (Input.mousePosition) - transform.position;
+			SetFromSlot();
 		}
 		else
 		{
-			transform.localScale = new Vector2(1,1);
+
 		}
 	}
 }

@@ -19,13 +19,18 @@ public class TrainTimeScript : MonoBehaviour {
 
 	}
 
+	bool IsTimeOut()
+	{
+		return (seconds <= 0 && minutes == 0 && hours == 0);
+	}
+
 	void Update()
 	{
-		if (TrainScript.currentSpeed == 0)
+		UpdateUI ();
+		if (TrainController.currentSpeed == 0)
 			return;
-		if (seconds < 0 && minutes == 0 && hours == 0)
+		if (IsTimeOut())
 		{
-			Debug.Log ("Time out");
 			return;
 		}
 		if (seconds < 0)
@@ -39,6 +44,21 @@ public class TrainTimeScript : MonoBehaviour {
 			}
 		}
 		seconds -= Time.deltaTime;
+	}
 
+	public UILabel timeLabel;
+	void UpdateUI()
+	{
+		string time = "";
+		if (hours < 10)
+			time += "0";
+		time += hours + ":";
+		if (minutes < 10)
+			time += "0";
+		time += minutes + ":";
+		if (seconds < 10)
+			time += "0";
+		time += (int)seconds;
+		timeLabel.text = time;
 	}
 }

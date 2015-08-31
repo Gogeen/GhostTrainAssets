@@ -5,7 +5,7 @@ public class WagonScript : MonoBehaviour {
 
 	RoadScript road;
 	public bool isHead;
-	public Transform camera;
+	public Transform trainCamera;
 	public Transform nextPoint;
 	public Transform frontWheel;
 	public Transform backWheel;
@@ -61,14 +61,14 @@ public class WagonScript : MonoBehaviour {
 		{
 			Vector3 camPos = transform.position;
 			camPos.z = -10;
-			camera.position = camPos;
+			trainCamera.position = camPos;
 		}
 
 	}
 
 	void OnTriggerEnter2D(Collider2D coll)
 	{
-		if (TrainScript.currentSpeed < 0)
+		if (TrainController.currentSpeed < 0)
 			return;
 
 		if (coll.gameObject.layer == LayerMask.NameToLayer("road"))
@@ -83,7 +83,7 @@ public class WagonScript : MonoBehaviour {
 
 	void OnTriggerExit2D(Collider2D coll)
 	{
-		if (TrainScript.currentSpeed > 0)
+		if (TrainController.currentSpeed > 0)
 			return;
 
 		if (coll.gameObject.layer == LayerMask.NameToLayer("road"))
@@ -108,6 +108,6 @@ public class WagonScript : MonoBehaviour {
 
 	void Update()
 	{
-		Move(TrainScript.currentSpeed);
+		Move(TrainController.currentSpeed);
 	}
 }

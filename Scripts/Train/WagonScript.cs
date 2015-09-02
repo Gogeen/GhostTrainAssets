@@ -75,8 +75,13 @@ public class WagonScript : MonoBehaviour {
 		{
 			if (coll.transform == nextPoint)
 			{
+				/*if (GetComponent<WagonConnector>().nextWagon != null)
+				{
+					GetComponent<WagonConnector>().nextWagon.GetComponent<WagonScript>().nextPoint = nextPoint;
+				}*/
 				transform.position = nextPoint.position;
 				nextPoint = road.GetNextPoint (nextPoint);
+
 			} 
 		}
 	}

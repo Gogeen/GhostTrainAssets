@@ -3,13 +3,25 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class TrainController : MonoBehaviour {
+	public bool canControl = true;
 	public float minSpeed;
 	public float maxSpeed;
 	public float acceleration;
 	public static float currentSpeed;
 
+	float startMinSpeed;
+	float startMaxSpeed;
+
+	public bool IsSlowed()
+	{
+		return (minSpeed != startMinSpeed || maxSpeed != startMaxSpeed);
+	}
+
 	void Start()
 	{
+		startMinSpeed = minSpeed;
+		startMaxSpeed = maxSpeed;
+
 		currentSpeed = 0;
 		if (speedWheelScrollbar != null)
 			SetWheelValue (currentSpeed);
@@ -34,15 +46,29 @@ public class TrainController : MonoBehaviour {
 				currentSpeed += acceleration*Time.deltaTime;
 			else
 				currentSpeed -= acceleration*Time.deltaTime;
-
-			if (currentSpeed < minSpeed)
+			if (IsSlowed())
 			{
-				currentSpeed = minSpeed;
-				break;
-			} else if (currentSpeed > maxSpeed)
+				if (currentSpeed < startMinSpeed)
+				{
+					currentSpeed = startMinSpeed;
+					break;
+				} else if (currentSpeed > startMaxSpeed)
+				{
+					currentSpeed = startMaxSpeed;
+					break;
+				}
+			}
+			else 
 			{
-				currentSpeed = maxSpeed;
-				break;
+				if (currentSpeed < minSpeed)
+				{
+					currentSpeed = minSpeed;
+					break;
+				} else if (currentSpeed > maxSpeed)
+				{
+					currentSpeed = maxSpeed;
+					break;
+				}
 			}
 			yield return null;
 
@@ -58,7 +84,7 @@ public class TrainController : MonoBehaviour {
 		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
 		float valueInRange = Mathf.Abs (minSpeed) + currentSpeed;
 		Vector3 eulerAngles = speedWheelArrow.localEulerAngles;
-		eulerAngles.z = -(2 * valueInRange/SpeedRange - 1) * 90;
+		eulerAngles.z = -(2 * Mathf.Clamp(valueInRange/SpeedRange,0,1) - 1) * 90;
 		speedWheelArrow.localEulerAngles = eulerAngles;
 	}
 
@@ -84,7 +110,8 @@ public class TrainController : MonoBehaviour {
 		}
 		if (speedWheelScrollbar != null)
 		{
-			AccelerateTo(GetWheelSpeed());
+			if (canControl)
+				AccelerateTo(GetWheelSpeed());
 		}
 		if (Input.GetKeyDown(KeyCode.Space))
 		{

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class RoadScript : MonoBehaviour {
 
+
 	public bool isCircle;
 	public List<Transform> points = new List<Transform>();
 	void OnDrawGizmos()

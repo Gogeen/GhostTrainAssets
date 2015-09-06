@@ -8,13 +8,14 @@ public class TrainController : MonoBehaviour {
 	public float maxSpeed;
 	public float acceleration;
 	public static float currentSpeed;
+	public static float currentAcceleration;
 
 	float startMinSpeed;
 	float startMaxSpeed;
 
 	public bool IsSlowed()
 	{
-		return (minSpeed != startMinSpeed || maxSpeed != startMaxSpeed);
+		return (maxSpeed < startMaxSpeed);
 	}
 
 	void Start()
@@ -23,6 +24,7 @@ public class TrainController : MonoBehaviour {
 		startMaxSpeed = maxSpeed;
 
 		currentSpeed = 0;
+		currentAcceleration = acceleration;
 		if (speedWheelScrollbar != null)
 			SetWheelValue (currentSpeed);
 	}
@@ -102,6 +104,11 @@ public class TrainController : MonoBehaviour {
 		return speedValue;
 	}
 
+	public void Stop()
+	{
+		SetWheelValue(0);
+	}
+
 	void Update()
 	{
 		if (speedWheelArrow!= null)
@@ -115,7 +122,7 @@ public class TrainController : MonoBehaviour {
 		}
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
-			SetWheelValue(0);
+			Stop();
 		}
 	}
 }

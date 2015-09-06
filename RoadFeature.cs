@@ -34,6 +34,7 @@ public class RoadFeature : MonoBehaviour {
 			workTimer -= Time.deltaTime;
 			yield return null;
 		}
+		repeatTimer = repeatTime;
 		playerTrain.canControl = true;
 		playerTrain.speedWheelScrollbar.backgroundWidget.color = Color.white;
 
@@ -44,8 +45,16 @@ public class RoadFeature : MonoBehaviour {
 		repeatTimer = repeatTime;
 	}
 
+	bool turnedOn = true;
+	public void ToggleFeature(bool value)
+	{
+		turnedOn = value;
+	}
+
 	void Update()
 	{
+		if (!turnedOn)
+			return;
 		if (repeatTimer > 0)
 		{
 			repeatTimer -= Time.deltaTime;

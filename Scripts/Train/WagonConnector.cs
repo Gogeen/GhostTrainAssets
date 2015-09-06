@@ -11,10 +11,10 @@ public class WagonConnector : MonoBehaviour {
 		{
 			return;
 		}
-		if ((GetComponent<WagonScript>().backWheel.position - nextWagon.position).magnitude != range)
+		if ((transform.position - nextWagon.position).magnitude != range)
 		{
-			float additionalRange = (GetComponent<WagonScript>().backWheel.position - nextWagon.position).magnitude - range;
-			nextWagon.position += (GetComponent<WagonScript>().backWheel.position - nextWagon.position).normalized * additionalRange;
+			float additionalRange = (transform.position - nextWagon.position).magnitude - range;
+			nextWagon.position += (transform.position - nextWagon.position).normalized * additionalRange;
 		}
 
 	}

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class WagonScript : MonoBehaviour {
 
@@ -7,9 +8,8 @@ public class WagonScript : MonoBehaviour {
 	public bool isHead;
 	public Transform trainCamera;
 	public Transform nextPoint;
+	Transform nextUnreachedPoint;
 	public Transform frontWheel;
-	public Transform backWheel;
-
 
 	void Start()
 	{
@@ -29,34 +29,22 @@ public class WagonScript : MonoBehaviour {
 	{
 		return -GetAngleBetween (Vector2.up, direction);
 	}
-
-	float GetRotationPercent()
+	
+	public void Rotate()
 	{
-		float percent = (frontWheel.position - road.GetPreviousPoint (nextPoint).position).magnitude / (frontWheel.position - backWheel.position).magnitude;
-		if (percent>1)
-			return 1;
-		if (percent<0)
-			return 0;
-		return percent;
-	}
-
-	public void RotateFor(Vector2 lastDir, Vector2 newDir)
-	{
-		float rotateAngle = GetAngleBetween (lastDir, newDir);
-		float rotationPercent = GetRotationPercent();
-		float lastRotation = GetVectorRotation (lastDir);
+		Vector3 lastReachedPointPosition = road.GetPreviousPoint (nextUnreachedPoint).position;
+		Vector3 frontWheelPotentialPosition = lastReachedPointPosition + (nextUnreachedPoint.position - lastReachedPointPosition).normalized*(lastReachedPointPosition - frontWheel.position).magnitude;
 
 		Vector3 localEulers = transform.localEulerAngles;
-		localEulers.z = lastRotation - rotateAngle*rotationPercent;
+		localEulers.z = GetVectorRotation(frontWheelPotentialPosition - transform.position);
 		transform.localEulerAngles = localEulers;
+
 	}
 	public void Move(float speed)
 	{
-		GetComponent<Rigidbody2D>().velocity = (nextPoint.position-road.GetPreviousPoint (nextPoint).position).normalized*speed*Time.deltaTime;
-		Transform previousPoint = road.GetPreviousPoint (nextPoint);
-		Vector2 lastDirection = previousPoint.position - road.GetPreviousPoint (previousPoint).position;
-		Vector2 newDirection = nextPoint.position - previousPoint.position;
-		RotateFor(lastDirection,newDirection);
+		GetComponent<Rigidbody2D>().velocity = (nextPoint.position - transform.position).normalized*speed;
+		if (nextUnreachedPoint != null)
+			Rotate();
 		if (isHead)
 		{
 			Vector3 camPos = transform.position;
@@ -68,49 +56,26 @@ public class WagonScript : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D coll)
 	{
-		if (TrainController.currentSpeed < 0)
+		if (TrainController.currentSpeed <= 0)
 			return;
 
 		if (coll.gameObject.layer == LayerMask.NameToLayer("road"))
 		{
-			if (coll.transform == nextPoint)
-			{
-				/*if (GetComponent<WagonConnector>().nextWagon != null)
-				{
-					GetComponent<WagonConnector>().nextWagon.GetComponent<WagonScript>().nextPoint = nextPoint;
-				}*/
-				transform.position = nextPoint.position;
-				nextPoint = road.GetNextPoint (nextPoint);
-
-			} 
+			nextUnreachedPoint = road.GetNextPoint(coll.transform); 
 		}
 	}
+
+
+
 
 	void OnTriggerExit2D(Collider2D coll)
 	{
-		if (TrainController.currentSpeed > 0)
-			return;
-
 		if (coll.gameObject.layer == LayerMask.NameToLayer("road"))
 		{
-			Transform previousPoint = road.GetPreviousPoint (nextPoint);
-			if (coll.transform == previousPoint)
-			{
-				transform.position = previousPoint.position;
-				nextPoint = previousPoint;
-			}
+			nextPoint = road.GetNextPoint (nextPoint);
 		}
 	}
-
-	void OnDrawGizmos()
-	{
-		if (!isHead)
-			return;
-		Transform previousPoint = transform.parent.GetComponent<RoadScript> ().GetPreviousPoint (nextPoint);
-		Gizmos.color = new Color (0,0,0);
-		Gizmos.DrawLine (transform.parent.GetComponent<RoadScript> ().GetPreviousPoint (previousPoint).position, previousPoint.position);
-	}
-
+	
 	void Update()
 	{
 		Move(TrainController.currentSpeed);

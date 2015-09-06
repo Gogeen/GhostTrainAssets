@@ -23,8 +23,11 @@ public class SlowAnomaly : Anomaly {
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
 			TrainController trainController = coll.transform.parent.GetComponent<TrainController>();
-			trainController.minSpeed /= 1 - strength/100;
-			trainController.maxSpeed /= 1 - strength/100;
+			if (trainController.IsSlowed())
+			{
+				trainController.minSpeed /= 1 - strength/100;
+				trainController.maxSpeed /= 1 - strength/100;
+			}
 			//trainController.acceleration /= 1 - strength/100;
 		}
 	}

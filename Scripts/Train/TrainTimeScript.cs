@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+[RequireComponent(typeof(PlayerTrain))]
 public class TrainTimeScript : MonoBehaviour {
 
 	public static int hours;
@@ -27,7 +27,7 @@ public class TrainTimeScript : MonoBehaviour {
 	void Update()
 	{
 		UpdateUI ();
-		if (TrainController.currentSpeed == 0)
+		if (GetComponent<PlayerTrain>().speed == 0)
 			return;
 		if (IsTimeOut())
 		{
@@ -42,6 +42,10 @@ public class TrainTimeScript : MonoBehaviour {
 				minutes += 60;
 				hours -= 1;
 			}
+		}
+		if (GetComponent<PlayerTrain> ().ghostMode) 
+		{
+			seconds -= Time.deltaTime;
 		}
 		seconds -= Time.deltaTime;
 	}

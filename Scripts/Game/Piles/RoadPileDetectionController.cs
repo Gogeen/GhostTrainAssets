@@ -3,14 +3,15 @@ using System.Collections;
 
 public class RoadPileDetectionController : MonoBehaviour {
 
+	public PlayerTrain target;
 	public float range;
 	public GameUI gameUI;
 	public string description;
 
 	float GetMinimumRange()
 	{
-		float trainSpeed = TrainController.currentSpeed;
-		float trainAcceleration = TrainController.currentAcceleration;
+		float trainSpeed = target.speed;
+		float trainAcceleration = target.acceleration;
 		float range = (trainSpeed/2) * (trainSpeed/trainAcceleration);
 		return range;
 	}

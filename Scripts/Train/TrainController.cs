@@ -3,30 +3,27 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class TrainController : MonoBehaviour {
-	public bool canControl = true;
 	public float minSpeed;
 	public float maxSpeed;
 	public float acceleration;
-	public static float currentSpeed;
-	public static float currentAcceleration;
 
-	float startMinSpeed;
+	public float speed;
+
 	float startMaxSpeed;
 
-	public bool IsSlowed()
+	public float GetStartMaxSpeed()
 	{
-		return (maxSpeed < startMaxSpeed);
+		return startMaxSpeed;
 	}
-
-	void Start()
+	
+	public virtual void Start()
 	{
-		startMinSpeed = minSpeed;
 		startMaxSpeed = maxSpeed;
 
-		currentSpeed = 0;
-		currentAcceleration = acceleration;
-		if (speedWheelScrollbar != null)
-			SetWheelValue (currentSpeed);
+		if (minSpeed > 0)
+			speed = minSpeed;
+		else
+			speed = 0;
 	}
 
 	public void AccelerateTo(float value)
@@ -37,92 +34,43 @@ public class TrainController : MonoBehaviour {
 
 	private IEnumerator accelerateTo(float value)
 	{
-		while(currentSpeed != value)
+		while(speed != value)
 		{
-			if (Mathf.Abs (currentSpeed - value) < acceleration*Time.deltaTime)
+			if (Mathf.Abs (speed - value) < acceleration*Time.deltaTime)
 			{
-				currentSpeed = value;
+				speed = value;
 				break;
 			}
-			if (currentSpeed < value)
-				currentSpeed += acceleration*Time.deltaTime;
+			if (speed < value)
+				speed += acceleration*Time.deltaTime;
 			else
-				currentSpeed -= acceleration*Time.deltaTime;
-			if (IsSlowed())
+				speed -= acceleration*Time.deltaTime;
+
+			if (speed < minSpeed)
 			{
-				if (currentSpeed < startMinSpeed)
-				{
-					currentSpeed = startMinSpeed;
-					break;
-				} else if (currentSpeed > startMaxSpeed)
-				{
-					currentSpeed = startMaxSpeed;
-					break;
-				}
-			}
-			else 
+				speed = minSpeed;
+				break;
+			} else if (speed > maxSpeed)
 			{
-				if (currentSpeed < minSpeed)
-				{
-					currentSpeed = minSpeed;
-					break;
-				} else if (currentSpeed > maxSpeed)
-				{
-					currentSpeed = maxSpeed;
-					break;
-				}
+				speed = maxSpeed;
+				break;
 			}
+
 			yield return null;
 
 		}
 		yield return null;
 	}
 
-	public UIScrollBar speedWheelScrollbar;
-	public Transform speedWheelArrow;
 
-	void RotateWheelArrow()
-	{
-		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
-		float valueInRange = Mathf.Abs (minSpeed) + currentSpeed;
-		Vector3 eulerAngles = speedWheelArrow.localEulerAngles;
-		eulerAngles.z = -(2 * Mathf.Clamp(valueInRange/SpeedRange,0,1) - 1) * 90;
-		speedWheelArrow.localEulerAngles = eulerAngles;
-	}
 
-	void SetWheelValue(float speed)
+	public virtual void Stop()
 	{
-		float speedValue = Mathf.Abs (minSpeed) + speed;
-		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
-		speedWheelScrollbar.value = speedValue/SpeedRange;
-	}
-
-	float GetWheelSpeed()
-	{
-		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
-		float speedValue = speedWheelScrollbar.value * SpeedRange - Mathf.Abs (minSpeed);
-		return speedValue;
-	}
-
-	public void Stop()
-	{
-		SetWheelValue(0);
+		AccelerateTo(0);
 	}
 
 	void Update()
 	{
-		if (speedWheelArrow!= null)
-		{
-			RotateWheelArrow();
-		}
-		if (speedWheelScrollbar != null)
-		{
-			if (canControl)
-				AccelerateTo(GetWheelSpeed());
-		}
-		if (Input.GetKeyDown(KeyCode.Space))
-		{
-			Stop();
-		}
+
 	}
 }

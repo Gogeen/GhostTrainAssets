@@ -7,7 +7,7 @@ public class GameUI : MonoBehaviour {
 	public bool showWarning = false;
 	public void ShowRoadWarning(string text)
 	{
-		GameObject.Find ("Map").GetComponent<RoadFeature> ().ToggleFeature (false);
+		GameObject.Find ("Map").GetComponent<RoadFeatureController> ().ToggleFeatures (false);
 		showWarning = true;
 		warningWindow.GetComponent<TweenPosition> ().from = warningWindow.transform.localPosition;
 		warningWindow.GetComponent<TweenPosition> ().to = warningWindow.transform.localPosition - new Vector3(warningWindow.GetComponent<UISprite>().localSize.x,0,0);
@@ -16,7 +16,7 @@ public class GameUI : MonoBehaviour {
 	}
 	public void HideRoadWarning()
 	{
-		GameObject.Find ("Map").GetComponent<RoadFeature> ().ToggleFeature (true);
+		GameObject.Find ("Map").GetComponent<RoadFeatureController> ().ToggleFeatures (true);
 		showWarning = false;
 		warningWindow.GetComponent<TweenPosition> ().PlayReverse ();
 	}

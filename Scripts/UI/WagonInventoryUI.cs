@@ -7,10 +7,14 @@ public class WagonInventoryUI : MonoBehaviour {
 	public bool developerAccess;
 
 	public GameObject slotPrefab;
+	public Transform wagonGameObject;
 	public int sizeX;
 	public int sizeY;
 	List<Transform> slots = new List<Transform>();
 	public List<Transform> items = new List<Transform>();
+
+	public string itemForSignName;
+
 	void InitSlotsGrid()
 	{
 		Vector2 backgroundSize = GetComponent<UISprite> ().localSize;
@@ -89,6 +93,75 @@ public class WagonInventoryUI : MonoBehaviour {
 		}
 	}
 
+	bool IsTriangle(int slotIndex)
+	{
+		Transform slot = slots[slotIndex];
+		if (IsSlotEmpty(slot))
+			return false;
+		Item item = slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>();
+		if (item.itemName != itemForSignName)
+			return false;
+		
+		// triangle sign check
+		if (slotIndex+sizeX*2+1 >= slots.Count)
+			return false;
+		if (IsSlotEmpty(slots[slotIndex+sizeX*2-1]) || IsSlotEmpty(slots[slotIndex+sizeX*2+1]))
+			return false;
+		if ((slotIndex+sizeX*2-1)/sizeX != (slotIndex+sizeX*2+1)/sizeX)
+			return false;
+		if (slots[slotIndex+sizeX*2-1].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName && 
+		    slots[slotIndex+sizeX*2+1].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName)
+		{
+			return true;//Debug.Log ("has triangle");
+		}
+		return false;
+	}
+
+	bool IsRectangle(int slotIndex)
+	{
+		Transform slot = slots[slotIndex];
+		if (IsSlotEmpty(slot))
+			return false;
+		Item item = slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>();
+		if (item.itemName != itemForSignName)
+			return false;
+		
+		// rectangle sign check
+		if (slotIndex+sizeX*2+2 >= slots.Count)
+			return false;
+		if (IsSlotEmpty(slots[slotIndex+2]) || IsSlotEmpty(slots[slotIndex+sizeX*2]) || IsSlotEmpty(slots[slotIndex+sizeX*2+2]))
+			return false;
+		if ((slotIndex)/sizeX != (slotIndex+2)/sizeX)
+			return false;
+		if (slots[slotIndex+2].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName && 
+		    slots[slotIndex+sizeX*2].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName &&
+		    slots[slotIndex+sizeX*2+2].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName)
+		{
+			return true;//Debug.Log ("has rectangle");
+		}
+		return false;
+	}
+
+	public void CheckSigns()
+	{
+		for (int slotIndex = 0; slotIndex < slots.Count; slotIndex++)
+		{
+			if (IsTriangle(slotIndex))
+			{
+				wagonGameObject.GetComponent<WagonScript>().signType = SignsController.SignType.Triangle;
+				return;
+			}
+			else if (IsRectangle(slotIndex))
+			{
+				wagonGameObject.GetComponent<WagonScript>().signType = SignsController.SignType.Rectangle;
+				return;
+			}
+
+		}
+		wagonGameObject.GetComponent<WagonScript>().signType = SignsController.SignType.None;
+
+	}
+
 	void Start () {
 		slots.Clear ();
 		Transform slotsGrid = transform.GetChild (0);
@@ -103,5 +176,6 @@ public class WagonInventoryUI : MonoBehaviour {
 	void Update () {
 		if (developerAccess)
 			InitSlotsGrid ();
+		CheckSigns ();
 	}
 }

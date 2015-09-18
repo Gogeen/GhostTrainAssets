@@ -7,6 +7,7 @@ public class Item : MonoBehaviour {
 	public int slotIndex;
 	public Vector2 size;
 	public string spriteName;
+	public string itemName;
 	public string description;
 
 	void Start()

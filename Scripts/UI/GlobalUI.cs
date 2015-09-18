@@ -1,15 +1,18 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+
 public class GlobalUI : MonoBehaviour {
 
 	public GameObject gameUI;
 	public GameObject inventoryUI;
+	public GameObject StrategyMapUI;
 
 	public enum States
 	{
 		Game,
-		Inventory
+		Inventory,
+		StrategyMap
 	}
 	static States currentState;
 	States lastState;
@@ -61,11 +64,15 @@ public class GlobalUI : MonoBehaviour {
 		{
 			inventoryUI.SetActive(isActivate);
 		}
+		else if (state == States.StrategyMap)
+		{
+			StrategyMapUI.SetActive(isActivate);
+		}
 	}
 
 	void Start()
 	{
-		currentState = States.Game;
+		SetState(States.StrategyMap);
 		lastState = currentState;
 		Array states = Enum.GetValues (typeof(States));
 		foreach(States state in states)
@@ -73,7 +80,6 @@ public class GlobalUI : MonoBehaviour {
 			ActivateUI(false, state);
 		}
 		ActivateUI(true, currentState);
-
 	}
 
 	void Update()

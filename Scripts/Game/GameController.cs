@@ -20,6 +20,11 @@ public static class GameController {
 
 	public static void Quit()
 	{
-		Application.Quit();
+		Application.LoadLevel(0);
 	}
+
+    public static void EnterTown(int index)
+    {
+        Application.LoadLevel(index);
+    }
 }

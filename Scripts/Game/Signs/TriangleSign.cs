@@ -7,6 +7,7 @@ public class TriangleSign : Sign {
 	[Range(1,100)]public int strength;
 	public override IEnumerator Cast(PlayerTrain playerTrain)
 	{
+        
 		if (roadFeature != null)
 			roadFeature.stopFeature = true;
 

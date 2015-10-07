@@ -8,7 +8,8 @@ public class WaystationController : MonoBehaviour {
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
 			PlayerTrain controller = coll.transform.parent.GetComponent<PlayerTrain>();
-			if (controller.speed == 0)
+            controller.nearObject = true;
+            if (controller.speed == 0)
 				Debug.Log ("open waystation menu");
 		}
 
@@ -16,13 +17,13 @@ public class WaystationController : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D coll)
 	{
-		if (coll.gameObject.layer == LayerMask.NameToLayer("enemy"))
-		{
-			if (coll.gameObject.GetComponent<WagonScript>().isHead)
-			{
-				EnemyTrain controller = coll.transform.parent.GetComponent<EnemyTrain>();
-				controller.StopFor(controller.waystationTime);
-			}
-		}
-	}
+        if (coll.gameObject.layer == LayerMask.NameToLayer("enemy"))
+        {
+            if (coll.gameObject.GetComponent<WagonScript>().isHead)
+            {
+                EnemyTrain controller = coll.transform.parent.GetComponent<EnemyTrain>();
+                controller.StopFor(controller.waystationTime);
+            }
+        }
+    }
 }

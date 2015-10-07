@@ -4,14 +4,12 @@ using System.Collections;
 public class SlowAnomaly : Anomaly {
 
 	[Range(1,99)]public float strength;
-	bool playerInside = false;
-	void OnTriggerStay2D(Collider2D coll)
+	void OnTriggerEnter2D(Collider2D coll)
 	{
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
-			if (playerInside)
-				return;
-			playerInside = true;
+            if (!coll.gameObject.GetComponent<WagonScript>().IsHead())
+                return;
 			TrainController trainController = coll.transform.parent.GetComponent<TrainController>();
 			trainController.maxSpeed -= trainController.GetStartMaxSpeed()*(1 - strength/100);
 
@@ -22,9 +20,16 @@ public class SlowAnomaly : Anomaly {
 	{
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
-			playerInside = false;
-			TrainController trainController = coll.transform.parent.GetComponent<TrainController>();
+            if (!coll.gameObject.GetComponent<WagonScript>().IsLast())
+                return;
+            TrainController trainController = coll.transform.parent.GetComponent<TrainController>();
 			trainController.maxSpeed += trainController.GetStartMaxSpeed()*(1 - strength/100);
 		}
 	}
+
+    /*void Start()
+    {
+        GetComponent<AudioSource>().clip = sound;
+        GetComponent<AudioSource>().Play();
+    }*/
 }

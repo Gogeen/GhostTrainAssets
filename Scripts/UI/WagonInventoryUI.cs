@@ -101,7 +101,29 @@ public class WagonInventoryUI : MonoBehaviour {
 		Item item = slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>();
 		if (item.itemName != itemForSignName)
 			return false;
-		
+        int itemRowIndex = slotIndex % sizeX;
+        int cycleIterations = 0;
+        if (itemRowIndex <= (sizeX - 1) / 2)
+            cycleIterations = itemRowIndex;
+        else
+            cycleIterations = sizeX - 1 - itemRowIndex;
+
+        for (int signHeight = 1; signHeight <= cycleIterations; signHeight++)
+        {
+            // triangle sign check
+            if (slotIndex + sizeX * signHeight + signHeight >= slots.Count)
+                continue;
+            if (IsSlotEmpty(slots[slotIndex + sizeX * signHeight - signHeight]) || IsSlotEmpty(slots[slotIndex + sizeX * signHeight + signHeight]))
+                continue;
+            if ((slotIndex + sizeX * signHeight - signHeight) / sizeX != (slotIndex + sizeX * signHeight + signHeight) / sizeX)
+                continue;
+            if (slots[slotIndex + sizeX * signHeight - signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName &&
+                slots[slotIndex + sizeX * signHeight + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName)
+            {
+                return true;//Debug.Log ("has triangle");
+            }
+        }
+        /*
 		// triangle sign check
 		if (slotIndex+sizeX*2+1 >= slots.Count)
 			return false;
@@ -113,7 +135,7 @@ public class WagonInventoryUI : MonoBehaviour {
 		    slots[slotIndex+sizeX*2+1].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName)
 		{
 			return true;//Debug.Log ("has triangle");
-		}
+		}*/
 		return false;
 	}
 
@@ -125,9 +147,29 @@ public class WagonInventoryUI : MonoBehaviour {
 		Item item = slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>();
 		if (item.itemName != itemForSignName)
 			return false;
-		
-		// rectangle sign check
-		if (slotIndex+sizeX*2+2 >= slots.Count)
+
+        int itemRowIndex = slotIndex % sizeX;
+        int cycleIterations = sizeX - 1 - itemRowIndex;
+        
+        for (int signHeight = 1; signHeight <= cycleIterations; signHeight++)
+        {
+            // rectangle sign check
+            if (slotIndex + sizeX * signHeight + signHeight >= slots.Count)
+                continue;
+            if (IsSlotEmpty(slots[slotIndex + signHeight]) || IsSlotEmpty(slots[slotIndex + sizeX * signHeight]) || IsSlotEmpty(slots[slotIndex + sizeX * signHeight + signHeight]))
+                continue;
+            if ((slotIndex) / sizeX != (slotIndex + signHeight) / sizeX)
+                continue;
+            if (slots[slotIndex + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName &&
+                slots[slotIndex + sizeX * signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName &&
+                slots[slotIndex + sizeX * signHeight + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName)
+            {
+                return true;//Debug.Log ("has rectangle");
+            }
+        }
+        /*
+        // rectangle sign check
+        if (slotIndex+sizeX*2+2 >= slots.Count)
 			return false;
 		if (IsSlotEmpty(slots[slotIndex+2]) || IsSlotEmpty(slots[slotIndex+sizeX*2]) || IsSlotEmpty(slots[slotIndex+sizeX*2+2]))
 			return false;
@@ -138,7 +180,7 @@ public class WagonInventoryUI : MonoBehaviour {
 		    slots[slotIndex+sizeX*2+2].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName)
 		{
 			return true;//Debug.Log ("has rectangle");
-		}
+		}*/
 		return false;
 	}
 

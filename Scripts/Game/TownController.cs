@@ -12,10 +12,7 @@ public class TownController : MonoBehaviour {
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
 			playerTrain.canControl = false;
-			if (playerTrain.speed > 0)
-			{
-				playerTrain.Stop();
-			}
+			playerTrain.Stop();
 		}
 	}
 
@@ -26,8 +23,9 @@ public class TownController : MonoBehaviour {
 			if (playerTrain.speed == 0)
 			{
 				Debug.Log ("finished map");
-				spawner.SetTrainTo(spawner.spawnPoint);
-				playerTrain.canControl = true;
+                GameController.EnterTown(1);
+				//spawner.SetTrainTo(spawner.spawnPoint);
+				//playerTrain.canControl = true;
 			}
 		}
 	}

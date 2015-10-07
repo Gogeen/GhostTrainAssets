@@ -14,7 +14,22 @@ public class WagonScript : MonoBehaviour {
 	Transform nextUnreachedPoint;
 	public float cameraOffset;
 
-
+    public bool IsHead()
+    {
+        return isHead;
+    }
+    public bool IsLast()
+    {
+        if (GetComponent<WagonConnector>())
+        {
+            if (GetComponent<WagonConnector>().nextWagon != null)
+            {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
 
 	float GetAngleBetween(Vector2 first, Vector2 second)
 	{

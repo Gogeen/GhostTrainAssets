@@ -7,6 +7,7 @@ public class Sign : ScriptableObject {
 	public float cooldown;
 	public GameObject prefab;
 	public RoadFeature roadFeature;
+    public AudioClip sound;
 
 	public virtual IEnumerator Cast(PlayerTrain playerTrain)
 	{

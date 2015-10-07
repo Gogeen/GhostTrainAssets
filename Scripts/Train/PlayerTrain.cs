@@ -6,14 +6,37 @@ public class PlayerTrain : TrainController {
 	public bool canControl = true;
 	public bool ghostMode = false;
 
-	public void ToggleGhostMode(bool value)
+    public bool nearObject = false;
+
+    public void StopNearNextObject()
+    {
+        StopCoroutine("stopNearNextObject");
+        StartCoroutine("stopNearNextObject");
+    }
+
+    IEnumerator stopNearNextObject()
+    {
+        RoadFeatureController featuresController = GameObject.Find("Map").GetComponent<RoadFeatureController>();
+        featuresController.ToggleFeatures(false);
+        nearObject = false;
+        while (!nearObject)
+        {
+            yield return null;
+        }
+        nearObject = false;
+        Stop();
+    }
+
+    public void ToggleGhostMode(bool value)
 	{
 		ghostMode = value;
 
 		for(int wagonIndex = 0; wagonIndex < transform.childCount; wagonIndex++)
 		{
-			Transform wagon = transform.GetChild(wagonIndex);
-			SpriteRenderer wagonSprite = wagon.GetChild(0).GetComponent<SpriteRenderer>();
+            Transform wagon = transform.GetChild(wagonIndex);
+            if (wagon.GetComponent<WagonScript>() == null)
+                continue;
+            SpriteRenderer wagonSprite = wagon.GetChild(0).GetComponent<SpriteRenderer>();
 			Color wagonColor = wagonSprite.color;
 			if (ghostMode)
 			{	
@@ -67,11 +90,18 @@ public class PlayerTrain : TrainController {
 		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
 		speedWheelScrollbar.value = speedValue/SpeedRange;
 	}
-	
+    bool speedChangedManually = false;
+    float scrollbarSpeedValue = 0;
 	float GetWheelSpeed()
 	{
 		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
 		float speedValue = speedWheelScrollbar.value * SpeedRange - Mathf.Abs (minSpeed);
+        if (scrollbarSpeedValue != speedWheelScrollbar.value)
+        {
+            scrollbarSpeedValue = speedWheelScrollbar.value;
+            speedChangedManually = true;
+            Debug.Log("manually changed speed");
+        }
 		return speedValue;
 	}
 
@@ -81,6 +111,7 @@ public class PlayerTrain : TrainController {
 	}
 
 	void Update () {
+       
 		if (speedWheelArrow!= null)
 		{
 			RotateWheelArrow();
@@ -88,7 +119,15 @@ public class PlayerTrain : TrainController {
 		if (speedWheelScrollbar != null)
 		{
 			if (canControl)
-				AccelerateTo(GetWheelSpeed());
+            {
+                if (speedChangedManually)
+                {
+                    StopCoroutine("stopNearNextObject");
+                    speedChangedManually = false;
+                }
+                AccelerateTo(GetWheelSpeed());
+            }
+		    
 		}
 		if (Input.GetKeyDown(KeyCode.Space))
 		{

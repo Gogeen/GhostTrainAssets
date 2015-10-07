@@ -4,6 +4,7 @@ using System.Collections;
 public class SignsController : MonoBehaviour {
 
 	public float globalCooldown = 0;
+    public AudioSource source;
 	public ScriptableObject triangleSign;
 	public ScriptableObject rectangleSign;
 	public enum SignType
@@ -24,12 +25,16 @@ public class SignsController : MonoBehaviour {
 		{
 			StartCoroutine (((TriangleSign)triangleSign).Cast(GetComponent<PlayerTrain>()));
 			globalCooldown = ((Sign)triangleSign).cooldown;
-		}
+            source.clip = ((Sign)triangleSign).sound;
+            source.Play();
+        }
 		else if (type == SignType.Rectangle)
 		{
 			StartCoroutine (((RectangleSign)rectangleSign).Cast(GetComponent<PlayerTrain>()));
 			globalCooldown = ((Sign)rectangleSign).cooldown;
-		}
+            source.clip = ((Sign)rectangleSign).sound;
+            source.Play();
+        }
 	}
 
 	void Update()

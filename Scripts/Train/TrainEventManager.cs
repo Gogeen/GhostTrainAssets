@@ -55,32 +55,36 @@ public class TrainEventManager : MonoBehaviour {
 			RaycastHit2D hit = Physics2D.GetRayIntersection(trainCamera.ScreenPointToRay(Input.mousePosition));
 			if (hit.collider != null)
 			{
-				if (hit.collider.gameObject.layer == LayerMask.NameToLayer("player"))
-				{
-					GameObject wagon = hit.collider.gameObject;
-					if (!wagon.GetComponent<WagonScript>().isHead)
-					{
-						if (!GameController.IsPaused())
-						{
-							if (wagon.GetComponent<WagonScript>().CanCastSign() && GetComponent<SignsController>().CanCast())
-							{
-								wagon.GetComponent<Animator>().Play("wagonAnim");
-								wagon.GetComponent<WagonScript>().CastSign();
-							}
-						}
-					}
-					else
-					{
-						if (!ghostModeToggled)
-						{
-							GlobalUI.SetState(GlobalUI.States.Inventory);
-						}
-						else
-						{
-							ghostModeToggled = false;
-						}
-					}
-				}
+                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("player"))
+                {
+                    GameObject wagon = hit.collider.gameObject;
+                    if (!wagon.GetComponent<WagonScript>().isHead)
+                    {
+                        if (!GameController.IsPaused())
+                        {
+                            if (wagon.GetComponent<WagonScript>().CanCastSign() && GetComponent<SignsController>().CanCast())
+                            {
+                                wagon.GetComponent<Animator>().Play("wagonAnim");
+                                wagon.GetComponent<WagonScript>().CastSign();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!ghostModeToggled)
+                        {
+                            GlobalUI.SetState(GlobalUI.States.Inventory);
+                        }
+                        else
+                        {
+                            ghostModeToggled = false;
+                        }
+                    }
+                }
+                else if (hit.collider.gameObject.layer == LayerMask.NameToLayer("objectToStop"))
+                {
+                    GetComponent<PlayerTrain>().StopNearNextObject();
+                }
 			}
 
 

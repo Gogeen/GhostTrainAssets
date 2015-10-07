@@ -72,7 +72,7 @@ public class GlobalUI : MonoBehaviour {
 
 	void Start()
 	{
-		SetState(States.StrategyMap);
+		SetState(States.Game);
 		lastState = currentState;
 		Array states = Enum.GetValues (typeof(States));
 		foreach(States state in states)

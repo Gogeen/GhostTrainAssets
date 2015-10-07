@@ -5,10 +5,9 @@ public class RoadPileDetectionController : MonoBehaviour {
 
 	public PlayerTrain target;
 	public float range;
-	public GameUI gameUI;
-	public string description;
+    public RoadFeatureController featuresController;
 
-	float GetMinimumRange()
+    float GetMinimumRange()
 	{
 		float trainSpeed = target.speed;
 		float trainAcceleration = target.acceleration;
@@ -21,20 +20,18 @@ public class RoadPileDetectionController : MonoBehaviour {
 		GetComponent<CircleCollider2D> ().radius = range + GetMinimumRange ();
 	}
 
-	void OnTriggerEnter2D(Collider2D coll)
+	void OnTriggerStay2D(Collider2D coll)
 	{
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
-			if (!gameUI.IsWarningShown())
-			{
-				gameUI.ShowRoadWarning(description);
-			}
-		}
+           
+            target.nearObject = true;
+        }
 	}
 
 	void OnDestroy()
 	{
-		gameUI.HideRoadWarning();
+        featuresController.ToggleFeatures(true);
 
-	}
+    }
 }

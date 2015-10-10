@@ -3,7 +3,7 @@ using System.Collections;
 
 public class BreakControlFeature : RoadFeature {
 
-
+    /*
 	public float repeatTime;
 	float repeatTimer;
 	
@@ -67,5 +67,5 @@ public class BreakControlFeature : RoadFeature {
 		if (repeatTimer > 0) {
 			repeatTimer -= Time.deltaTime;
 		}
-	}
+	}*/
 }

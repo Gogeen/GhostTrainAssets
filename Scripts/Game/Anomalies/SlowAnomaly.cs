@@ -12,7 +12,7 @@ public class SlowAnomaly : Anomaly {
                 return;
 			TrainController trainController = coll.transform.parent.GetComponent<TrainController>();
 			trainController.maxSpeed -= trainController.GetStartMaxSpeed()*(1 - strength/100);
-
+            source.Play();
 		}
 	}
 

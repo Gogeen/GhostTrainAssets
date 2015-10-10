@@ -15,9 +15,11 @@ public class StrategyMapUIController : MonoBehaviour {
 	public GameObject roadProgressbar;
 	public UILabel travelTimer;
 	public GameObject startButton;
+    public GameObject townStartButton;
 
 
-	GameObject IsRoadBetween(GameObject firstTown, GameObject secondTown)
+
+    GameObject IsRoadBetween(GameObject firstTown, GameObject secondTown)
 	{
 		if (firstTown == null || secondTown == null)
 			return null;
@@ -192,10 +194,16 @@ public class StrategyMapUIController : MonoBehaviour {
 	{
 		UpdateTravelTimer ();
 
-		if (destinationTown != null)
-			startButton.SetActive(true);
-		else
-			startButton.SetActive(false);
+        if (destinationTown != null)
+        {
+            startButton.SetActive(true);
+            townStartButton.SetActive(true);
+        }
+        else
+        {
+            startButton.SetActive(false);
+            townStartButton.SetActive(false);
+        }
 
 		if (currentTown != null && currentTownFrame != null) 
 		{

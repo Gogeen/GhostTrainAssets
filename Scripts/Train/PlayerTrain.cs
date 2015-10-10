@@ -68,12 +68,13 @@ public class PlayerTrain : TrainController {
 
 	public override void Start () {
 		base.Start ();
-		if (speedWheelScrollbar != null)
-			SetWheelValue (speed);
+		SetWheelValue (speed);
 	}
 
-	public UIScrollBar speedWheelScrollbar;
-	public Transform speedWheelArrow;
+    public Camera UIcamera;
+    public UISprite wheelImage;
+    public GameObject wheelCollider;
+    public Transform speedWheelArrow;
 	
 	void RotateWheelArrow()
 	{
@@ -86,15 +87,47 @@ public class PlayerTrain : TrainController {
 	
 	void SetWheelValue(float speed)
 	{
-		float speedValue = Mathf.Abs (minSpeed) + speed;
+        /*float speedValue = Mathf.Abs (minSpeed) + speed;
 		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
-		speedWheelScrollbar.value = speedValue/SpeedRange;
-	}
+		speedWheelScrollbar.value = speedValue/SpeedRange;*/
+        wheelSpeedValue = speed;
+    }
     bool speedChangedManually = false;
-    float scrollbarSpeedValue = 0;
-	float GetWheelSpeed()
+    //float scrollbarSpeedValue = 0;
+    float GetAngleBetween(Vector2 first, Vector2 second)
+    {
+        float angle = Vector2.Angle(first, second);
+        Vector3 cross = Vector3.Cross(first, second);
+        if (cross.z > 0)
+            angle = -angle;
+        return angle;
+    }
+
+    float GetVectorRotation(Vector2 direction)
+    {
+        return -GetAngleBetween(Vector2.up, direction);
+    }
+    float wheelSpeedValue = 0;
+    float GetWheelSpeed()
 	{
-		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
+        float SpeedRange = Mathf.Abs(minSpeed) + Mathf.Abs(maxSpeed);
+        if (Input.GetMouseButton(0))
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(UIcamera.ScreenPointToRay(Input.mousePosition), out hit))
+            {
+                if (hit.collider.gameObject == wheelCollider)
+                {
+                    wheelSpeedValue = (GetVectorRotation(hit.point - speedWheelArrow.position) - 90) / -180;
+                    speedChangedManually = true;
+                    
+                }
+            }
+        }
+        float speedValue = wheelSpeedValue * SpeedRange - Mathf.Abs(minSpeed);
+
+        return speedValue;
+		/*float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
 		float speedValue = speedWheelScrollbar.value * SpeedRange - Mathf.Abs (minSpeed);
         if (scrollbarSpeedValue != speedWheelScrollbar.value)
         {
@@ -102,7 +135,7 @@ public class PlayerTrain : TrainController {
             speedChangedManually = true;
             Debug.Log("manually changed speed");
         }
-		return speedValue;
+		return speedValue;*/
 	}
 
 	public override void Stop()
@@ -116,19 +149,17 @@ public class PlayerTrain : TrainController {
 		{
 			RotateWheelArrow();
 		}
-		if (speedWheelScrollbar != null)
-		{
-			if (canControl)
+		if (canControl)
+        {
+            if (speedChangedManually)
             {
-                if (speedChangedManually)
-                {
-                    StopCoroutine("stopNearNextObject");
-                    speedChangedManually = false;
-                }
-                AccelerateTo(GetWheelSpeed());
+                StopCoroutine("stopNearNextObject");
+                speedChangedManually = false;
             }
+            AccelerateTo(GetWheelSpeed());
+        }
 		    
-		}
+		
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
 			Stop();

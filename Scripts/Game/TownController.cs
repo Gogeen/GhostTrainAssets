@@ -11,8 +11,10 @@ public class TownController : MonoBehaviour {
 	{
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
-			playerTrain.canControl = false;
-			playerTrain.Stop();
+            playerTrain.Stop();
+            playerTrain.AccelerateTo(0);
+            playerTrain.canControl = false;
+			
 		}
 	}
 

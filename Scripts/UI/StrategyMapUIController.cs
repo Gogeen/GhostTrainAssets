@@ -4,6 +4,8 @@ using System.Collections.Generic;
 [ExecuteInEditMode]
 public class StrategyMapUIController : MonoBehaviour {
 
+	public static StrategyMapUIController reference = null;
+
 	public GameObject currentTown;
 	public GameObject currentTownFrame;
 	public GameObject destinationTown;
@@ -17,7 +19,10 @@ public class StrategyMapUIController : MonoBehaviour {
 	public GameObject startButton;
     public GameObject townStartButton;
 
-
+	void OnEnable()
+	{
+		reference = this;
+	}
 
     GameObject IsRoadBetween(GameObject firstTown, GameObject secondTown)
 	{
@@ -54,7 +59,7 @@ public class StrategyMapUIController : MonoBehaviour {
 			{
 				roadProgressbar.transform.position = currentTown.transform.position;
 				roadProgressbar.transform.localEulerAngles = GetRoadRotation(road);
-				roadProgressbar.GetComponent<UISprite>().width = road.GetComponent<UISprite>().width;
+				roadProgressbar.GetComponent<UISprite>().width = road.GetComponent<StrategyMapUIRoad>().roadLength;
 				roadProgressbar.SetActive(true);
 				if (potentialTown != town)
 				{

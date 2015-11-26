@@ -3,10 +3,32 @@ using System.Collections;
 
 public class PlayerTrain : TrainController {
 
+	public static PlayerTrain reference = null;
+
 	public bool canControl = true;
 	public bool ghostMode = false;
 
     public bool nearObject = false;
+
+
+	void OnEnable()
+	{
+		reference = this;
+		for(int wagonIndex = 0; wagonIndex < InventorySystem.reference.wagonUIs.Count; wagonIndex++)
+		{
+			InventorySystem.reference.wagonUIs[wagonIndex].wagonGameObject = transform.GetChild(wagonIndex+1);
+			InventorySystem.reference.wagonUIs[wagonIndex].CheckSigns();
+		}
+	}
+
+	void OnDisable()
+	{
+		reference = null;
+		for(int wagonIndex = 0; wagonIndex < InventorySystem.reference.wagonUIs.Count; wagonIndex++)
+		{
+			InventorySystem.reference.wagonUIs[wagonIndex].wagonGameObject = null;
+		}
+	}
 
     public void StopNearNextObject()
     {
@@ -78,9 +100,15 @@ public class PlayerTrain : TrainController {
 	
 	void RotateWheelArrow()
 	{
-		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (maxSpeed);
-		float valueInRange = Mathf.Abs (minSpeed) + speed;
 		Vector3 eulerAngles = speedWheelArrow.localEulerAngles;
+		if (GetCurrentMaxSpeed() <= 0)
+		{
+			eulerAngles.z = -90;
+			speedWheelArrow.localEulerAngles = eulerAngles;
+			return;
+		}
+		float SpeedRange = Mathf.Abs (minSpeed) + Mathf.Abs (GetCurrentMaxSpeed());
+		float valueInRange = Mathf.Abs (minSpeed) + speed;
 		eulerAngles.z = -(2 * Mathf.Clamp(valueInRange/SpeedRange,0,1) - 1) * 90;
 		speedWheelArrow.localEulerAngles = eulerAngles;
 	}
@@ -110,7 +138,7 @@ public class PlayerTrain : TrainController {
     float wheelSpeedValue = 0;
     float GetWheelSpeed()
 	{
-        float SpeedRange = Mathf.Abs(minSpeed) + Mathf.Abs(maxSpeed);
+		float SpeedRange = Mathf.Abs(minSpeed) + Mathf.Abs(GetCurrentMaxSpeed());
         if (Input.GetMouseButton(0))
         {
             RaycastHit hit;
@@ -143,8 +171,10 @@ public class PlayerTrain : TrainController {
 		SetWheelValue(0);
 	}
 
-	void Update () {
-       
+	void Update () 
+	{
+		maxSpeed = PlayerSaveData.reference.trainData.GetCurrentSpeed ();
+
 		if (speedWheelArrow!= null)
 		{
 			RotateWheelArrow();

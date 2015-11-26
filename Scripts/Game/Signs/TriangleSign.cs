@@ -13,12 +13,12 @@ public class TriangleSign : Sign {
 
 		playerTrain.canControl = false;
 		playerTrain.wheelImage.color = Color.red;
-		playerTrain.maxSpeed += playerTrain.GetStartMaxSpeed() * (float)strength / 100;
+		playerTrain.speedDebuffPercent -= strength;
 
 		playerTrain.AccelerateTo (playerTrain.maxSpeed);
 		yield return new WaitForSeconds (duration);
 
-		playerTrain.maxSpeed -= playerTrain.GetStartMaxSpeed() * (float)strength / 100;
+		playerTrain.speedDebuffPercent += strength;
 		playerTrain.wheelImage.color = Color.white;
 		playerTrain.canControl = true;
 

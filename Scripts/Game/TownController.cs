@@ -3,17 +3,15 @@ using System.Collections;
 
 public class TownController : MonoBehaviour {
 
-	public PlayerTrain playerTrain;
-
-	public PlayerTrainSpawn spawner;
+	//public PlayerTrainSpawn spawner;
 
 	void OnTriggerEnter2D(Collider2D coll)
 	{
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
-            playerTrain.Stop();
-            playerTrain.AccelerateTo(0);
-            playerTrain.canControl = false;
+			PlayerTrain.reference.Stop();
+			PlayerTrain.reference.AccelerateTo(0);
+			PlayerTrain.reference.canControl = false;
 			
 		}
 	}
@@ -22,9 +20,10 @@ public class TownController : MonoBehaviour {
 	{
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
-			if (playerTrain.speed == 0)
+			if (PlayerTrain.reference.speed == 0)
 			{
 				Debug.Log ("finished map");
+				TrainTimeScript.reference.ComeInTown();
                 GameController.EnterTown(1);
 				//spawner.SetTrainTo(spawner.spawnPoint);
 				//playerTrain.canControl = true;

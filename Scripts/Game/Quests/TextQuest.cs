@@ -4,11 +4,13 @@ using System.Collections.Generic;
 
 public class TextQuest : ScriptableObject {
 
+	public string name;
     public bool showUnavailableAnswers;
     public int startNodeIndex;
     public int finishNodeIndex;
     public List<AINode> nodes = new List<AINode>();
     public int zeroResultIndex;
+	public ScriptableObject resultScript;
     public List<ResultNode> results = new List<ResultNode>();
     // Use this for initialization
 
@@ -107,4 +109,20 @@ public class TextQuest : ScriptableObject {
         }
         return null;
     }
+
+	public void ApplyResult(int index)
+	{
+		if (name == "Girl")
+		{
+			if (index == 1)
+			{
+				Debug.Log (FindResultNode(index).GetText());
+			}
+			else if (index == 2)
+			{
+				Debug.Log (FindResultNode(index).GetText());
+				PlayerSaveData.reference.quests.Add (JournalQuestsDatabase.reference.FindByName("сокровищница времени"));
+			}
+		}
+	}
 }

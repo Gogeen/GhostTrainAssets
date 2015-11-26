@@ -3,14 +3,12 @@ using System.Collections;
 
 public class RoadPileDetectionController : MonoBehaviour {
 
-	public PlayerTrain target;
 	public float range;
-    public RoadFeatureController featuresController;
-
+    
     float GetMinimumRange()
 	{
-		float trainSpeed = target.speed;
-		float trainAcceleration = target.acceleration;
+		float trainSpeed = PlayerTrain.reference.speed;
+		float trainAcceleration = PlayerTrain.reference.acceleration;
 		float range = (trainSpeed/2) * (trainSpeed/trainAcceleration);
 		return range;
 	}
@@ -25,13 +23,13 @@ public class RoadPileDetectionController : MonoBehaviour {
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
            
-            target.nearObject = true;
+			PlayerTrain.reference.nearObject = true;
         }
 	}
 
 	void OnDestroy()
 	{
-        featuresController.ToggleFeatures(true);
+		RoadFeatureController.reference.ToggleFeatures(true);
 
     }
 }

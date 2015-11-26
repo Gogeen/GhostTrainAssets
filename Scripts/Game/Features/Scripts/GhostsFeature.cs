@@ -37,7 +37,7 @@ public class GhostsFeature : RoadFeature {
 				stopFeature = false;
 				tickTimer = tickTime;
 				RemoveGhosts();
-				playerTrain.maxSpeed += speedPenalty;
+				playerTrain.speedDebuffPercent += speedPenalty;
 				speedPenalty = 0;
 
 			}
@@ -47,8 +47,8 @@ public class GhostsFeature : RoadFeature {
 				if (ghostCount < maxGhostCount)
 				{
 					SpawnGhost();
-					speedPenalty += playerTrain.GetStartMaxSpeed() * ghostStrength / 100;
-					playerTrain.maxSpeed -= playerTrain.GetStartMaxSpeed() * ghostStrength / 100;
+					speedPenalty += ghostStrength;
+					playerTrain.speedDebuffPercent += ghostStrength;
 				}
 			}
 			tickTimer -= Time.deltaTime;

@@ -6,19 +6,25 @@ public class TrainController : MonoBehaviour {
 	public float minSpeed;
 	public float maxSpeed;
 	public float acceleration;
+	public float speedDebuffPercent = 0;
 
 	public float speed;
 
-	float startMaxSpeed;
+	//float startMaxSpeed;
 
 	public float GetStartMaxSpeed()
 	{
-		return startMaxSpeed;
+		return maxSpeed;
 	}
-	
+
+	public float GetCurrentMaxSpeed()
+	{
+		return maxSpeed*(100 - speedDebuffPercent)/100;
+	}
+
 	public virtual void Start()
 	{
-		startMaxSpeed = maxSpeed;
+		//startMaxSpeed = maxSpeed;
 
 		if (minSpeed > 0)
 			speed = minSpeed;
@@ -50,9 +56,9 @@ public class TrainController : MonoBehaviour {
 			{
 				speed = minSpeed;
 				break;
-			} else if (speed > maxSpeed)
+			} else if (speed > GetCurrentMaxSpeed())
 			{
-				speed = maxSpeed;
+				speed = GetCurrentMaxSpeed();
 				break;
 			}
 

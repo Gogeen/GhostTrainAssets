@@ -5,7 +5,6 @@ using System;
 public class GlobalUI : MonoBehaviour {
 
 	public GameObject gameUI;
-	public GameObject inventoryUI;
 	public GameObject StrategyMapUI;
 
 	public enum States
@@ -62,7 +61,7 @@ public class GlobalUI : MonoBehaviour {
 		}
 		else if (state == States.Inventory)
 		{
-			inventoryUI.SetActive(isActivate);
+			InventorySystem.reference.ToggleUI();
 		}
 		else if (state == States.StrategyMap)
 		{
@@ -73,22 +72,22 @@ public class GlobalUI : MonoBehaviour {
 	void Start()
 	{
 		SetState(States.Game);
-		lastState = currentState;
+		/*lastState = currentState;
 		Array states = Enum.GetValues (typeof(States));
 		foreach(States state in states)
 		{
 			ActivateUI(false, state);
-		}
+		}*/
 		ActivateUI(true, currentState);
 	}
 
 	void Update()
 	{
-		if (currentState != lastState)
+		/*if (currentState != lastState)
 		{
 			ActivateUI(false, lastState);
 			ActivateUI(true, currentState);
 			lastState = currentState;
-		}
+		}*/
 	}
 }

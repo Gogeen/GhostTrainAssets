@@ -22,6 +22,8 @@ public class TrainEventManager : MonoBehaviour {
 
 	void Update () 
 	{
+		if (GameController.IsPaused ())
+			return;
 		if (Input.GetMouseButtonDown(0))
 		{
 			clickTimer = 0;
@@ -73,7 +75,7 @@ public class TrainEventManager : MonoBehaviour {
                     {
                         if (!ghostModeToggled)
                         {
-                            GlobalUI.SetState(GlobalUI.States.Inventory);
+							InventorySystem.reference.ToggleUI();
                         }
                         else
                         {

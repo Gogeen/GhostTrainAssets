@@ -8,7 +8,7 @@ public class StrategyMapObjectInfoUI : MonoBehaviour {
         gameObject.SetActive(true);
         transform.position = obj.transform.position;
         Vector3 localPos = transform.localPosition;
-        localPos += new Vector3(0, GetComponent<UISprite>().localSize.y / 2 + 10 + obj.GetComponent<UISprite>().localSize.y / 2, 0);
+        localPos += new Vector3(0, GetComponent<UISprite>().localSize.y / 2 + 100, 0);
         transform.localPosition = localPos;
         
     }

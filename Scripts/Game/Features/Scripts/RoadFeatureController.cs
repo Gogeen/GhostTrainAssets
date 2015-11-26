@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class RoadFeatureController : MonoBehaviour {
 
-	public PlayerTrain playerTrain;
+	public static RoadFeatureController reference = null;
 	public List<FeatureInfo> usedFeatures = new List<FeatureInfo>();
 
 	Features activeFeatures = Features.None;
@@ -21,6 +21,11 @@ public class RoadFeatureController : MonoBehaviour {
 	{
 		public Features type;
 		public RoadFeature reference;
+	}
+
+	public void Awake()
+	{
+		reference = this;
 	}
 
 	public bool IsFeatureActive(Features feature)
@@ -58,7 +63,7 @@ public class RoadFeatureController : MonoBehaviour {
 			feature.reference.OnUpdate();
 			if (feature.reference.CanCast())
 			{
-				StartCoroutine (feature.reference.Cast(playerTrain));
+				StartCoroutine (feature.reference.Cast(PlayerTrain.reference));
 			}
 		}
 	}

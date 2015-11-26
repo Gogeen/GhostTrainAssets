@@ -3,14 +3,37 @@ using System.Collections;
 
 public class WaystationController : MonoBehaviour {
 
+	public GameObject waystationPanel;
+	public void Repair()
+	{
+		TrainTimeScript.reference.AddTime (-15);
+		Debug.Log ("repair part here");
+	}
+	public void DeactivateButton(GameObject button)
+	{
+		button.GetComponent<BoxCollider> ().enabled = false;
+	}
+
+	public void ContinueTravel()
+	{
+		GameController.Resume();
+		waystationPanel.SetActive(false);
+
+	}
+
 	void OnTriggerStay2D(Collider2D coll)
 	{
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
-			PlayerTrain controller = coll.transform.parent.GetComponent<PlayerTrain>();
-            controller.nearObject = true;
-            if (controller.speed == 0)
+			PlayerTrain.reference.nearObject = true;
+			if (PlayerTrain.reference.speed == 0)
+			{
+				GameController.Pause();
+				TrainTimeScript.reference.ComeInWaystation();
+				waystationPanel.SetActive(true);
 				Debug.Log ("open waystation menu");
+				GetComponent<BoxCollider2D>().enabled = false;
+			}
 		}
 
 	}

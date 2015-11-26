@@ -9,6 +9,7 @@ public class TownUI : MonoBehaviour {
     public int levelToLoadIndex = 2;
     public void StartTravel(int mapIndex)
     {
+		PlayerSaveData.reference.Save ();
         Application.LoadLevel(mapIndex);
     }
 
@@ -20,4 +21,9 @@ public class TownUI : MonoBehaviour {
     {
         townUI.SetActive(!townUI.activeSelf);
     }
+
+	public void ToggleInventoryUI()
+	{
+		InventorySystem.reference.ToggleUI();
+	}
 }

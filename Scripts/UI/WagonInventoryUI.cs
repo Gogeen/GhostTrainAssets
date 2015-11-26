@@ -10,8 +10,8 @@ public class WagonInventoryUI : MonoBehaviour {
 	public Transform wagonGameObject;
 	public int sizeX;
 	public int sizeY;
-	List<Transform> slots = new List<Transform>();
-	public List<Transform> items = new List<Transform>();
+	public List<Transform> slots = new List<Transform>();
+	//public List<Transform> items = new List<Transform>();
 
 	public string itemForSignName;
 
@@ -55,6 +55,19 @@ public class WagonInventoryUI : MonoBehaviour {
 
 	public bool CanPutInSlot(Transform slotToPut, Vector2 itemSize)
 	{
+		for (int slotIndex = 0; slotIndex < slots.IndexOf(slotToPut); slotIndex++)
+		{
+			Transform slot = slots[slotIndex];
+			if (!IsSlotEmpty(slot))
+			{
+				if (GetUIItemInSlot(slot).reference.uiInfo.size.x + slots.IndexOf(slot)%sizeX >= slots.IndexOf(slotToPut)%sizeX + 1 &&
+				    GetUIItemInSlot(slot).reference.uiInfo.size.y + slots.IndexOf(slot)/sizeX >= slots.IndexOf(slotToPut)/sizeX + 1)
+				{
+					Debug.Log ("!!!");
+					return false;
+				}
+			}
+		}
 		int currentSlotIndex = slots.IndexOf(slotToPut);
 
 		for(int XIndex = 0; XIndex < itemSize.x; XIndex++)
@@ -83,14 +96,41 @@ public class WagonInventoryUI : MonoBehaviour {
 		return true;
 	}
 
-	void InitItems()
+	public Item GetUIItemInSlot(int slotIndex)
 	{
-		foreach(Transform item in items)
+		if (IsSlotEmpty (slots [slotIndex]))
+			return null;
+		return slots [slotIndex].GetComponent<UIDragDropContainer> ().reparentTarget.GetChild (0).GetComponent<Item>();
+	}
+
+	public Item GetUIItemInSlot(Transform slot)
+	{
+		if (IsSlotEmpty (slot))
+			return null;
+		return slot.GetComponent<UIDragDropContainer> ().reparentTarget.GetChild (0).GetComponent<Item>();
+	}
+
+	public void InitItem(GameObject item)
+	{
+		Item itemInfo = item.GetComponent<Item>();
+		Transform slot = slots[itemInfo.slotIndex];
+		item.transform.parent = slot.GetComponent<UIDragDropContainer>().reparentTarget;
+	}
+
+	public bool IsEmptySlotForItem(int slotIndex, GameObject item)
+	{
+		Transform slot = slots [slotIndex];
+		return CanPutInSlot (slot, item.GetComponent<Item>().reference.uiInfo.size);
+	}
+
+	public int FindEmptySlotForItem(GameObject item)
+	{
+		foreach(Transform slot in slots)
 		{
-			Item itemInfo = item.GetComponent<Item>();
-			Transform slot = slots[itemInfo.slotIndex];
-			item.parent = slot.GetComponent<UIDragDropContainer>().reparentTarget;
+			if(CanPutInSlot (slot, item.GetComponent<Item>().reference.uiInfo.size))
+				return slots.IndexOf(slot);
 		}
+		return -1;
 	}
 
 	bool IsTriangle(int slotIndex)
@@ -99,7 +139,7 @@ public class WagonInventoryUI : MonoBehaviour {
 		if (IsSlotEmpty(slot))
 			return false;
 		Item item = slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>();
-		if (item.itemName != itemForSignName)
+		if (item.reference.name != itemForSignName)
 			return false;
         int itemRowIndex = slotIndex % sizeX;
         int cycleIterations = 0;
@@ -117,8 +157,8 @@ public class WagonInventoryUI : MonoBehaviour {
                 continue;
             if ((slotIndex + sizeX * signHeight - signHeight) / sizeX != (slotIndex + sizeX * signHeight + signHeight) / sizeX)
                 continue;
-            if (slots[slotIndex + sizeX * signHeight - signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName &&
-                slots[slotIndex + sizeX * signHeight + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName)
+            if (slots[slotIndex + sizeX * signHeight - signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName &&
+                slots[slotIndex + sizeX * signHeight + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName)
             {
                 return true;//Debug.Log ("has triangle");
             }
@@ -145,7 +185,7 @@ public class WagonInventoryUI : MonoBehaviour {
 		if (IsSlotEmpty(slot))
 			return false;
 		Item item = slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>();
-		if (item.itemName != itemForSignName)
+		if (item.reference.name != itemForSignName)
 			return false;
 
         int itemRowIndex = slotIndex % sizeX;
@@ -160,9 +200,9 @@ public class WagonInventoryUI : MonoBehaviour {
                 continue;
             if ((slotIndex) / sizeX != (slotIndex + signHeight) / sizeX)
                 continue;
-            if (slots[slotIndex + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName &&
-                slots[slotIndex + sizeX * signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName &&
-                slots[slotIndex + sizeX * signHeight + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().itemName == itemForSignName)
+			if (slots[slotIndex + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName &&
+			    slots[slotIndex + sizeX * signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName &&
+			    slots[slotIndex + sizeX * signHeight + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName)
             {
                 return true;//Debug.Log ("has rectangle");
             }
@@ -186,6 +226,10 @@ public class WagonInventoryUI : MonoBehaviour {
 
 	public void CheckSigns()
 	{
+		if (wagonGameObject == null)
+		{
+			return;
+		}
 		for (int slotIndex = 0; slotIndex < slots.Count; slotIndex++)
 		{
 			if (IsTriangle(slotIndex))
@@ -211,7 +255,7 @@ public class WagonInventoryUI : MonoBehaviour {
 		{
 			slots.Add (slotsGrid.GetChild (slotIndex));
 		}
-		InitItems ();
+		//InitItems ();
 	}
 	
 	// Update is called once per frame

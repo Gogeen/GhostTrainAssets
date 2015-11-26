@@ -3,24 +3,24 @@ using System.Collections;
 [ExecuteInEditMode]
 public class Item : MonoBehaviour {
 
-	public bool developerAccess;
+	public int wagonIndex;
 	public int slotIndex;
+
+	public InventoryItem reference = new InventoryItem();
+	/*
 	public Vector2 size;
 	public string spriteName;
 	public string itemName;
 	public string description;
-
-	void Start()
+	public InventoryItem.Type type;
+	*/
+	void OnEnable()
 	{
-		GetComponent<UISprite>().spriteName = spriteName;
+		GetComponent<UISprite>().spriteName = reference.uiInfo.spriteName;
 	}
 
 	void Update()
 	{
-		if (developerAccess)
-		{
-			GetComponent<UISprite>().spriteName = spriteName;
-		}
-		transform.localScale = size;
+		transform.localScale = reference.uiInfo.size;
 	}
 }

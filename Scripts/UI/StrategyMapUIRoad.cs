@@ -14,7 +14,7 @@ public class StrategyMapUIRoad : MonoBehaviour {
 	public GameObject waystationPrefab;
 
 	public float objectLabelRange;
-
+	public int roadLength;
 			
 	public List<TravelObject> objects = new List<TravelObject>();
 	public enum TravelObject
@@ -64,8 +64,7 @@ public class StrategyMapUIRoad : MonoBehaviour {
 		Vector3 roadRotation = transform.localEulerAngles;
 		roadRotation.z = GetVectorRotation(secondTown.position - firstTown.position) + 90;
 		transform.localEulerAngles = roadRotation;
-		float roadLength = (secondTown.localPosition - firstTown.localPosition).magnitude;
-		GetComponent<UISprite>().width = (int)roadLength;
+		roadLength = (int)(secondTown.localPosition - firstTown.localPosition).magnitude;
 
 		for (int childIndex = transform.childCount-1; childIndex >= 0; childIndex--)
 		{
@@ -74,7 +73,7 @@ public class StrategyMapUIRoad : MonoBehaviour {
 		int objectIndex = 0;
 		foreach(TravelObject travelObject in objects)
 		{
-			GenerateObject(travelObject, GetComponent<UISprite>().width * (objectIndex + 1)/(objects.Count + 1));
+			GenerateObject(travelObject, roadLength * (objectIndex + 1)/(objects.Count + 1));
 			objectIndex += 1;
 		}
 	}

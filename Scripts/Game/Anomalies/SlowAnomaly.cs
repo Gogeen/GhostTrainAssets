@@ -11,7 +11,7 @@ public class SlowAnomaly : Anomaly {
             if (!coll.gameObject.GetComponent<WagonScript>().IsHead())
                 return;
 			TrainController trainController = coll.transform.parent.GetComponent<TrainController>();
-			trainController.maxSpeed -= trainController.GetStartMaxSpeed()*(1 - strength/100);
+			trainController.speedDebuffPercent += strength;
             source.Play();
 		}
 	}
@@ -23,7 +23,7 @@ public class SlowAnomaly : Anomaly {
             if (!coll.gameObject.GetComponent<WagonScript>().IsLast())
                 return;
             TrainController trainController = coll.transform.parent.GetComponent<TrainController>();
-			trainController.maxSpeed += trainController.GetStartMaxSpeed()*(1 - strength/100);
+			trainController.speedDebuffPercent -= strength;
 		}
 	}
 

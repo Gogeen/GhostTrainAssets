@@ -35,6 +35,7 @@ public class SignsController : MonoBehaviour {
             source.clip = ((Sign)rectangleSign).sound;
             source.Play();
         }
+		globalCooldown *= (100 - PlayerSaveData.reference.trainData.magicPower) / 100;
 	}
 
 	void Update()

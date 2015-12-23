@@ -18,6 +18,17 @@ public class StrategyMapUIController : MonoBehaviour {
 	public UILabel travelTimer;
 	public GameObject startButton;
 
+	public void LoadInfo()
+	{
+		destinationTown = null;
+		currentRoad = null;
+		foreach (ObjectInfo info in objectInfoPanels) {
+			if (info.reference != null)
+				Destroy(info.reference);
+		}
+		startButton.SetActive (false);
+	}
+
 	public string GetDestinationTownName()
 	{
 		return destinationTown.GetComponent<StrategyMapTownInfo> ().name;

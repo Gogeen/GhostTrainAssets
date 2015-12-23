@@ -11,6 +11,7 @@ public class WorldTowns : ScriptableObject {
 	public class TownInfo
 	{
 		public string name;
+		public PassengerInfo passengerInfo;
 		public VendorShop shopInfo;
 		public TextQuest quest;
 	}
@@ -22,5 +23,15 @@ public class WorldTowns : ScriptableObject {
 				return info;
 		}
 		return null;
+	}
+
+	[System.Serializable]
+	public class PassengerInfo
+	{
+		public int MinPercentIn;
+		public int MaxPercentIn;
+		public int MinPercentOut;
+		public int MaxPercentOut;
+
 	}
 }

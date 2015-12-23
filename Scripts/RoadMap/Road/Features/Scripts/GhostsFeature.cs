@@ -21,6 +21,7 @@ public class GhostsFeature : RoadFeature {
 		Debug.Log ("ghosts: "+ghostCount);
 		GameObject newGhost = Instantiate (ghostPrefab) as GameObject;
 		spawnedGhosts.Add (newGhost);
+		newGhost.GetComponent<GhostController> ().feature = this;
 
 		int wagonsCount = 0;
 		for(int childIndex = 0; childIndex < playerTrain.transform.childCount; childIndex++)
@@ -30,9 +31,28 @@ public class GhostsFeature : RoadFeature {
 				wagonsCount += 1;
 			}
 		}
-		GameObject wagon = playerTrain.GetWagon (Random.Range(0,wagonsCount)).gameObject;
 
-		newGhost.transform.parent = wagon.transform;
+		WagonScript wagon = null;
+		Transform spawnPoint = null;
+		for (int wagonIndex = 0; wagonIndex < wagonsCount; wagonIndex++) {
+			// try to get random wagon point
+			wagon = playerTrain.GetWagon (Random.Range(0,wagonsCount));
+			spawnPoint = wagon.GetGhostPoint ();
+			if (spawnPoint != null)
+				break;
+
+
+			wagon = playerTrain.GetWagon (wagonIndex);
+			spawnPoint = wagon.GetGhostPoint ();
+			if (spawnPoint != null)
+				break;
+
+		}
+		//GameObject wagon = playerTrain.GetWagon (Random.Range(0,wagonsCount)).gameObject;
+		if (spawnPoint == null)
+			return;
+
+		newGhost.transform.parent = spawnPoint;
 		newGhost.transform.localPosition = new Vector3(0,0,0);
 		newGhost.transform.localScale = new Vector3(1,1,1);
 		newGhost.transform.localEulerAngles = new Vector3(0,0,Random.Range(0.0f, 360.0f));
@@ -47,6 +67,14 @@ public class GhostsFeature : RoadFeature {
 			Destroy (spawnedGhosts[ghostIndex]);
 		}
 		spawnedGhosts.Clear ();
+	}
+
+	public void FinishGhostMove()
+	{
+		PlayerTrain playerTrain = PlayerTrain.reference;
+		speedPenalty += ghostStrength;
+		playerTrain.speedDebuffPercent += ghostStrength;
+
 	}
 
 	public override bool CanCast()
@@ -76,8 +104,7 @@ public class GhostsFeature : RoadFeature {
 				if (ghostCount < maxGhostCount)
 				{
 					SpawnGhost(playerTrain);
-					speedPenalty += ghostStrength;
-					playerTrain.speedDebuffPercent += ghostStrength;
+
 				}
 			}
 			tickTimer -= Time.deltaTime;

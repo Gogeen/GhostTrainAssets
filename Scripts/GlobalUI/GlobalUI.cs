@@ -16,6 +16,7 @@ public class GlobalUI : MonoBehaviour {
 	public GameObject Road;
 	public GameObject LoadingScreen;
 	public GameObject Waystation;
+	public GameObject LoadGame;
 
 	public GameObject Timer;
 	public GameObject PauseMenuButton;
@@ -33,6 +34,7 @@ public class GlobalUI : MonoBehaviour {
 		Road,
 		LoadingScreen,
 		Waystation,
+		LoadGame,
 		Null
 	}
 	public States currentState;
@@ -78,7 +80,7 @@ public class GlobalUI : MonoBehaviour {
 
 	}
 
-	void ClosePreviousWindows()
+	public void ClosePreviousWindows()
 	{
 		foreach(States state in lastStates)
 		{
@@ -111,6 +113,7 @@ public class GlobalUI : MonoBehaviour {
 		case States.Road: 			{Road.SetActive(isActivate);			break;}
 		case States.LoadingScreen: 	{LoadingScreen.SetActive(isActivate);	break;}
 		case States.Waystation: 	{Waystation.SetActive(isActivate);		break;}
+		case States.LoadGame: 		{LoadGame.SetActive(isActivate);		break;}
 		}
 		if (!isActivate)
 			return;
@@ -129,6 +132,7 @@ public class GlobalUI : MonoBehaviour {
 		case States.Road: 			{PauseMenuButton.SetActive(true);	break;}
 		case States.LoadingScreen: 	{PauseMenuButton.SetActive(false);	break;}
 		case States.Waystation: 	{PauseMenuButton.SetActive(true);	break;}
+		case States.LoadGame: 		{PauseMenuButton.SetActive(false);	break;}
 		}
 
 		// change timer visibility depending on state
@@ -145,6 +149,7 @@ public class GlobalUI : MonoBehaviour {
 		case States.Road: 			{Timer.SetActive(true);		break;}
 		case States.LoadingScreen: 	{Timer.SetActive(false);	break;}
 		case States.Waystation: 	{Timer.SetActive(true);		break;}
+		case States.LoadGame: 		{Timer.SetActive(false);	break;}
 		}
 
 		// change time speed depending on state
@@ -158,6 +163,13 @@ public class GlobalUI : MonoBehaviour {
 			InventorySystem.reference.OpenShop ();
 		else
 			InventorySystem.reference.CloseShop ();
+
+		if (state == States.LoadGame) {
+			LoadGame.GetComponent<LoadGameController> ().UpdateInfo ();
+		}
+
+		if (state == States.Town)
+			GameController.reference.UnloadMap ();
 		
 		// if activating window, need to do something with previous window
 
@@ -234,6 +246,11 @@ public class GlobalUI : MonoBehaviour {
 		else if (state == States.Waystation)
 		{
 			// waystation can be opened with PAUSE_MENU, but only if we are opening PAUSE_MENU, not waystation
+			ToggleUI(GetLastState(), false);
+		}
+		else if (state == States.LoadGame)
+		{
+			// load game can't be opened with any other window at the same time 
 			ToggleUI(GetLastState(), false);
 		}
 	}

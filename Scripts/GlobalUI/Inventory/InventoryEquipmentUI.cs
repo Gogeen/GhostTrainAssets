@@ -25,12 +25,11 @@ public class InventoryEquipmentUI : MonoBehaviour {
 
 	public void InitItem(GameObject item)
 	{
-		Item itemInfo = item.GetComponent<Item>();
-		item.GetComponent<UISprite> ().spriteName = itemInfo.reference.uiInfo.spriteName;
+		InventoryItemObject itemObject = item.GetComponent<InventoryItemObject>();
 		Transform slot = null;
 		foreach (SlotInfo info in slots)
 		{
-			if (info.type == itemInfo.reference.type)
+			if (info.type == itemObject.info.type)
 				slot = info.slot;
 
 		}
@@ -39,22 +38,8 @@ public class InventoryEquipmentUI : MonoBehaviour {
 			Debug.Log ("wrong item to init!");
 			return;
 		}
-		item.transform.parent = slot.GetComponent<UIDragDropContainer>().reparentTarget;
-		item.transform.localPosition = new Vector3 (0,0,0);
-		slot.GetComponent<UIDragDropContainer> ().reparentTarget.GetComponent<UIGrid> ().Reposition ();
+		itemObject.Place (slot);
 	}
 
-	public bool IsSlotEmpty(Transform slot)
-	{
-		if (slot.GetComponent<UIDragDropContainer> ().reparentTarget.childCount > 0)
-			return false;
-		return true;
-	}
 
-	public Item GetUIItemInSlot(Transform slot)
-	{
-		if (IsSlotEmpty (slot))
-			return null;
-		return slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>();
-	}
 }

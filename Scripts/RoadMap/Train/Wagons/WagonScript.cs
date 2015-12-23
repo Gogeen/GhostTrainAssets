@@ -16,6 +16,33 @@ public class WagonScript : MonoBehaviour {
 
 	public GameObject signObject;
 
+	public Transform ghostPoints;
+
+	public Transform GetGhostPoint()
+	{
+		if (ghostPoints == null)
+			return null;
+		int freeGhostPointsCount = 0;
+		for (int pointIndex = 0; pointIndex < ghostPoints.childCount; pointIndex++) {
+			Transform point = ghostPoints.GetChild (pointIndex);
+			if (point.childCount > 0)
+				continue;
+			freeGhostPointsCount += 1;
+		}
+		if (freeGhostPointsCount == 0)
+			return null;
+		int ghostPointIndex = Random.Range (0, freeGhostPointsCount);
+		for (int pointIndex = 0; pointIndex < ghostPoints.childCount; pointIndex++) {
+			Transform point = ghostPoints.GetChild (pointIndex);
+			if (point.childCount > 0)
+				continue;
+			if (ghostPointIndex == 0)
+				return point;
+			ghostPointIndex -= 1;
+		}
+		return null;
+	}
+
     public bool IsHead()
     {
         return isHead;
@@ -107,8 +134,7 @@ public class WagonScript : MonoBehaviour {
 
 	void Die()
 	{
-		//!!!
-		//Application.UnloadLevel(Application.loadedLevel);
+		GameController.reference.GameOver ();
 	}
 
 

@@ -47,20 +47,31 @@ public class TrainController : MonoBehaviour {
 				speed = value;
 				break;
 			}
-			if (speed < value)
-				speed += acceleration*Time.deltaTime;
-			else
-				speed -= acceleration*Time.deltaTime;
+			if (speed < value) {
+				speed += acceleration * Time.deltaTime;
+				if (speed > GetCurrentMaxSpeed ()) {
+					speed = GetCurrentMaxSpeed ();
+					//AccelerateTo(GetCurrentMaxSpeed());
+					break;
+				}
+			} else {
+				speed -= acceleration * Time.deltaTime;
+				if (speed < minSpeed)
+				{
+					speed = minSpeed;
+					break;
+				}
+			}
 
-			if (speed < minSpeed)
+			/*if (speed < minSpeed)
 			{
 				speed = minSpeed;
 				break;
 			} else if (speed > GetCurrentMaxSpeed())
 			{
-				speed = GetCurrentMaxSpeed();
+				//speed = GetCurrentMaxSpeed();
 				break;
-			}
+			}*/
 
 			yield return null;
 

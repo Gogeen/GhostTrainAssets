@@ -17,8 +17,7 @@ public class PauseMenuController : MonoBehaviour {
 
 	public void LoadGame()
 	{
-		PlayerSaveData.reference.LoadData ();
-		Application.LoadLevel(1);
+		GlobalUI.reference.SetState(GlobalUI.States.LoadGame);
 	}
 
 	public void ToggleSettingsMenu()

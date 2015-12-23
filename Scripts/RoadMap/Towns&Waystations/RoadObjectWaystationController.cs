@@ -3,7 +3,7 @@ using System.Collections;
 
 public class RoadObjectWaystationController : MonoBehaviour {
 
-	public VendorShop shopInfo;
+	public string name;
 
 	void OnTriggerStay2D(Collider2D coll)
 	{
@@ -12,8 +12,8 @@ public class RoadObjectWaystationController : MonoBehaviour {
 			PlayerTrain.reference.nearObject = true;
 			if (PlayerTrain.reference.speed == 0 && !PlayerTrain.reference.ghostMode)
 			{
-				TrainTimeScript.reference.ComeInWaystation();
-				InventorySystem.reference.LoadShopInfo (shopInfo);
+				PlayerSaveData.reference.LoadWaystationInfo (name);
+				TrainTimeScript.reference.ComeInCommunity();
 				GlobalUI.reference.SetState (GlobalUI.States.Waystation);
 				GetComponent<BoxCollider2D>().enabled = false;
 			}

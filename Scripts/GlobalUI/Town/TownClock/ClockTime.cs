@@ -25,8 +25,14 @@ public class ClockTime : MonoBehaviour {
 		timeWheel.GetComponent<UISprite> ().fillAmount = 0;
 	}
 
-	public void ShowActionTime(int minutes)
+	public void ShowActionTime(TownAction action)
 	{
+		ShowTime (currentTimeInHours);
+		int minutes = 0;
+		if (action is TownRepairAction)
+			minutes = ((TownRepairAction)action).GetTime ();
+		else
+			minutes = action.GetTime ();
 		Vector3 wheelRotation = timeWheel.transform.localEulerAngles;
 		wheelRotation.z = arrow.transform.localEulerAngles.z - 90;
 		timeWheel.transform.localEulerAngles = wheelRotation;

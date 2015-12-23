@@ -15,16 +15,6 @@ public class WagonInventoryUI : MonoBehaviour {
 
 	public string itemForSignName;
 
-	public void Clear()
-	{
-		for(int slotIndex = slots.Count - 1; slotIndex >= 0; slotIndex--)
-		{
-			Item item = GetUIItemInSlot(slotIndex);
-			if (item != null)
-				Destroy(item.gameObject);
-		}
-	}
-
 	void InitSlotsGrid()
 	{
 		Vector2 backgroundSize = GetComponent<UISprite> ().localSize;
@@ -65,14 +55,27 @@ public class WagonInventoryUI : MonoBehaviour {
 
 	public bool CanPutInSlot(Transform slotToPut, Vector2 itemSize)
 	{
+		// first, check that item not going through right side of wagon
+		if (slots.IndexOf (slotToPut) % sizeX + itemSize.x - 1 > sizeX)
+			return false;
+		
 		for (int slotIndex = 0; slotIndex < slots.IndexOf(slotToPut); slotIndex++)
 		{
+			// dont need to check slots righter than right side of item
+			if (slotIndex % sizeX > slots.IndexOf (slotToPut) % sizeX + itemSize.x - 1)
+				continue;
+			
 			Transform slot = slots[slotIndex];
-			if (!IsSlotEmpty(slot))
+			if (!InventorySystem.reference.IsSlotEmpty(slot))
 			{
-				if (GetUIItemInSlot(slot).reference.uiInfo.size.x + slots.IndexOf(slot)%sizeX >= slots.IndexOf(slotToPut)%sizeX + 1 &&
-				    GetUIItemInSlot(slot).reference.uiInfo.size.y + slots.IndexOf(slot)/sizeX >= slots.IndexOf(slotToPut)/sizeX + 1)
+				InventoryItemObject itemInCheckingSlot = InventorySystem.reference.GetItemObjectInSlot (slot);
+				Vector2 checkingItemSize = itemInCheckingSlot.info.uiInfo.size;
+				int checkingSlotIndex = slots.IndexOf (slot);
+				int potentialSlotIndex = slots.IndexOf (slotToPut);
+				if (checkingItemSize.x + checkingSlotIndex%sizeX >= potentialSlotIndex%sizeX + 1 &&
+					checkingItemSize.y + checkingSlotIndex/sizeX >= potentialSlotIndex/sizeX + 1)
 				{
+					//Debug.Log ("cant put item in slot "+slotToPut);
 					return false;
 				}
 			}
@@ -91,56 +94,24 @@ public class WagonInventoryUI : MonoBehaviour {
 				if (firstSlotRow != slotToCheckRow)
 					return false;
 				Transform slotToCheck = slots[slotToCheckIndex];
-				if (!IsSlotEmpty(slotToCheck))
+				if (!InventorySystem.reference.IsSlotEmpty(slotToCheck))
 					return false;
 			}
 		}
 		return true;
 	}
-
-	public bool IsSlotEmpty(Transform slot)
-	{
-		if (slot.GetComponent<UIDragDropContainer> ().reparentTarget.childCount > 0)
-			return false;
-		return true;
-	}
-
-	public Item GetUIItemInSlot(int slotIndex)
-	{
-		if (IsSlotEmpty (slots [slotIndex]))
-			return null;
-		return slots [slotIndex].GetComponent<UIDragDropContainer> ().reparentTarget.GetChild (0).GetComponent<Item>();
-	}
-
-	public Item GetUIItemInSlot(Transform slot)
-	{
-		if (IsSlotEmpty (slot))
-			return null;
-		return slot.GetComponent<UIDragDropContainer> ().reparentTarget.GetChild (0).GetComponent<Item>();
-	}
-
-	public void InitItem(GameObject item)
-	{
-
-		Item itemInfo = item.GetComponent<Item>();
-		item.GetComponent<UISprite> ().spriteName = itemInfo.reference.uiInfo.spriteName;
-		Transform slot = slots[itemInfo.slotIndex];
-		item.transform.parent = slot.GetComponent<UIDragDropContainer>().reparentTarget;
-		item.transform.localPosition = new Vector3 (0,0,0);
-		slot.GetComponent<UIDragDropContainer> ().reparentTarget.GetComponent<UIGrid> ().Reposition ();
-	}
-
-	public bool IsEmptySlotForItem(int slotIndex, GameObject item)
+		
+	public bool IsEmptySlotForItem(int slotIndex, InventoryItemObject item)
 	{
 		Transform slot = slots [slotIndex];
-		return CanPutInSlot (slot, item.GetComponent<Item>().reference.uiInfo.size);
+		return CanPutInSlot (slot, item.info.uiInfo.size);
 	}
 
-	public int FindEmptySlotForItem(GameObject item)
+	public int FindEmptySlotForItem(InventoryItemObject item)
 	{
 		foreach(Transform slot in slots)
 		{
-			if(CanPutInSlot (slot, item.GetComponent<Item>().reference.uiInfo.size))
+			if(CanPutInSlot (slot, item.info.uiInfo.size))
 				return slots.IndexOf(slot);
 		}
 		return -1;
@@ -149,10 +120,12 @@ public class WagonInventoryUI : MonoBehaviour {
 	bool IsTriangle(int slotIndex)
 	{
 		Transform slot = slots[slotIndex];
-		if (IsSlotEmpty(slot))
+		if (InventorySystem.reference.IsSlotEmpty(slot))
 			return false;
-		Item item = slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>();
-		if (item.reference.name != itemForSignName)
+		InventoryItemObject item = InventorySystem.reference.GetItemObjectInSlot (slot);
+		if (item.info.name != itemForSignName)
+			return false;
+		if (item.IsBroken ())
 			return false;
         int itemRowIndex = slotIndex % sizeX;
         int cycleIterations = 0;
@@ -166,41 +139,36 @@ public class WagonInventoryUI : MonoBehaviour {
             // triangle sign check
             if (slotIndex + sizeX * signHeight + signHeight >= slots.Count)
                 continue;
-            if (IsSlotEmpty(slots[slotIndex + sizeX * signHeight - signHeight]) || IsSlotEmpty(slots[slotIndex + sizeX * signHeight + signHeight]))
+			if (InventorySystem.reference.IsSlotEmpty(slots[slotIndex + sizeX * signHeight - signHeight]) || InventorySystem.reference.IsSlotEmpty(slots[slotIndex + sizeX * signHeight + signHeight]))
                 continue;
             if ((slotIndex + sizeX * signHeight - signHeight) / sizeX != (slotIndex + sizeX * signHeight + signHeight) / sizeX)
                 continue;
-            if (slots[slotIndex + sizeX * signHeight - signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName &&
-                slots[slotIndex + sizeX * signHeight + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName)
+			
+			if (InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight - signHeight]).info.name == itemForSignName &&
+				InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight + signHeight]).info.name == itemForSignName)
             {
-                return true;//Debug.Log ("has triangle");
+				if (InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight - signHeight]).IsBroken() ||
+					InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight + signHeight]).IsBroken())
+				{
+					continue;
+				}
+				else return true;//Debug.Log ("has triangle");
             }
         }
-        /*
-		// triangle sign check
-		if (slotIndex+sizeX*2+1 >= slots.Count)
-			return false;
-		if (IsSlotEmpty(slots[slotIndex+sizeX*2-1]) || IsSlotEmpty(slots[slotIndex+sizeX*2+1]))
-			return false;
-		if ((slotIndex+sizeX*2-1)/sizeX != (slotIndex+sizeX*2+1)/sizeX)
-			return false;
-		if (slots[slotIndex+sizeX*2-1].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName && 
-		    slots[slotIndex+sizeX*2+1].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName)
-		{
-			return true;//Debug.Log ("has triangle");
-		}*/
 		return false;
 	}
 
 	bool IsRectangle(int slotIndex)
 	{
 		Transform slot = slots[slotIndex];
-		if (IsSlotEmpty(slot))
+		if (InventorySystem.reference.IsSlotEmpty(slot))
 			return false;
-		Item item = slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>();
-		if (item.reference.name != itemForSignName)
+		InventoryItemObject item = InventorySystem.reference.GetItemObjectInSlot (slot);
+		if (item.info.name != itemForSignName)
 			return false;
-
+		if (item.IsBroken ())
+			return false;
+		
         int itemRowIndex = slotIndex % sizeX;
         int cycleIterations = sizeX - 1 - itemRowIndex;
         
@@ -209,31 +177,23 @@ public class WagonInventoryUI : MonoBehaviour {
             // rectangle sign check
             if (slotIndex + sizeX * signHeight + signHeight >= slots.Count)
                 continue;
-            if (IsSlotEmpty(slots[slotIndex + signHeight]) || IsSlotEmpty(slots[slotIndex + sizeX * signHeight]) || IsSlotEmpty(slots[slotIndex + sizeX * signHeight + signHeight]))
+			if (InventorySystem.reference.IsSlotEmpty(slots[slotIndex + signHeight]) || InventorySystem.reference.IsSlotEmpty(slots[slotIndex + sizeX * signHeight]) || InventorySystem.reference.IsSlotEmpty(slots[slotIndex + sizeX * signHeight + signHeight]))
                 continue;
             if ((slotIndex) / sizeX != (slotIndex + signHeight) / sizeX)
                 continue;
-			if (slots[slotIndex + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName &&
-			    slots[slotIndex + sizeX * signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName &&
-			    slots[slotIndex + sizeX * signHeight + signHeight].GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<Item>().reference.name == itemForSignName)
+			if (InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + signHeight]).info.name == itemForSignName &&
+				InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight]).info.name == itemForSignName &&
+				InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight + signHeight]).info.name == itemForSignName)
             {
-                return true;//Debug.Log ("has rectangle");
+				if (InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + signHeight]).IsBroken() ||
+					InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight]).IsBroken() ||
+					InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight + signHeight]).IsBroken())
+				{
+					continue;
+				}
+				else return true;//Debug.Log ("has rectangle");
             }
         }
-        /*
-        // rectangle sign check
-        if (slotIndex+sizeX*2+2 >= slots.Count)
-			return false;
-		if (IsSlotEmpty(slots[slotIndex+2]) || IsSlotEmpty(slots[slotIndex+sizeX*2]) || IsSlotEmpty(slots[slotIndex+sizeX*2+2]))
-			return false;
-		if ((slotIndex)/sizeX != (slotIndex+2)/sizeX)
-			return false;
-		if (slots[slotIndex+2].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName && 
-		    slots[slotIndex+sizeX*2].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName &&
-		    slots[slotIndex+sizeX*2+2].GetComponent<UIDragDropContainer>().reparentTarget.GetChild (0).GetComponent<Item>().itemName == itemForSignName)
-		{
-			return true;//Debug.Log ("has rectangle");
-		}*/
 		return false;
 	}
 
@@ -275,6 +235,6 @@ public class WagonInventoryUI : MonoBehaviour {
 	void Update () {
 		if (developerAccess)
 			InitSlotsGrid ();
-		CheckSigns ();
+		//CheckSigns ();
 	}
 }

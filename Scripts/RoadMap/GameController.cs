@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 public class GameController: MonoBehaviour {
 
 	public static GameController reference;
-
+	public GameObject MainCamera;
 
 	void Awake()
 	{
@@ -34,22 +34,49 @@ public class GameController: MonoBehaviour {
 		Time.timeScale = 1;
 	}
 
+	int lastLoadedSceneIndex = -1;
 	public void LoadMap(int index)
 	{
-		// something like waiting window should be here
+		UnloadMap ();
 		StartCoroutine(LoadLevel (index));
+		//LoadLevel (index);
 	}
 
 	IEnumerator LoadLevel(int index)
 	{
 		GlobalUI.reference.SetState (GlobalUI.States.LoadingScreen);
-		AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(index);
+		AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(index, LoadSceneMode.Additive);
 		yield return asyncOperation;
 		GlobalUI.reference.SetState (GlobalUI.States.Road);
-
+		lastLoadedSceneIndex = index;
+		MainCamera.SetActive (false);
 	}
-	void Update()
+	/*
+	void LoadLevel(int index)
 	{
+		GlobalUI.reference.SetState (GlobalUI.States.LoadingScreen);
+		SceneManager.LoadScene(index);
+		GlobalUI.reference.SetState (GlobalUI.States.Road);
+		lastLoadedSceneIndex = index;
+	}
+	*/
+
+	public void GameOver()
+	{
+		UnloadMap ();
+		GlobalUI.reference.SetState (GlobalUI.States.MainMenu);
+		GlobalUI.reference.SetState (GlobalUI.States.LoadGame);
+	}
+
+	public void UnloadMap()
+	{
+		if (lastLoadedSceneIndex >= 0) {
+			Debug.Log ("map should be unloaded");
+			SceneManager.UnloadScene (lastLoadedSceneIndex);
+			lastLoadedSceneIndex = -1;
+			MainCamera.SetActive (true);
+		}
 
 	}
+
 }

@@ -7,6 +7,7 @@ public class DatabaseInitializer : MonoBehaviour {
 	public JournalQuestsDatabase journalQuestsDatabase;
 	public ItemDatabase itemDatabase;
 	public WorldTowns townsDatabase;
+	public WorldWaystations waystationsDatabase;
 	void Awake () 
 	{
 		if (reference == null) 
@@ -26,6 +27,9 @@ public class DatabaseInitializer : MonoBehaviour {
 
 			WorldTowns.reference = townsDatabase;
 			Debug.Log("TownsDatabase initialized");
+
+			WorldWaystations.reference = waystationsDatabase;
+			Debug.Log("WaystationsDatabase initialized");
 
 		}
 		else

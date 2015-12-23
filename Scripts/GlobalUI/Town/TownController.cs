@@ -3,6 +3,11 @@ using System.Collections;
 
 public class TownController : MonoBehaviour {
 
+	public static TownController reference;
+
+	public GameObject TravelButtonPanel;
+	public string name;
+	public WorldTowns.PassengerInfo passengerInfo;
 	public VendorShop shopInfo;
 	public TextQuest quest;
 
@@ -10,12 +15,21 @@ public class TownController : MonoBehaviour {
     
 	public void StartTravel(int mapIndex)
     {
+		DeactivateTravelButton ();
 		PlayerSaveData.reference.Save ();
-		shopInfo = WorldTowns.reference.FindByName(StrategyMapUIController.reference.GetDestinationTownName ()).shopInfo;
-		quest = WorldTowns.reference.FindByName(StrategyMapUIController.reference.GetDestinationTownName ()).quest;
+		PlayerSaveData.reference.LoadTownInfo (StrategyMapUIController.reference.GetDestinationTownName ());
 		GameController.reference.LoadMap(mapIndex);
 	}
 
+	public void ActivateTravelButton()
+	{
+		TravelButtonPanel.SetActive (true);
+	}
+
+	public void DeactivateTravelButton()
+	{
+		TravelButtonPanel.SetActive (false);
+	}
 
 
     public void OpenStrategyMap()
@@ -40,7 +54,6 @@ public class TownController : MonoBehaviour {
 	// !!! need to rewrite shop opening part
 	public void OpenShop()
 	{
-		InventorySystem.reference.LoadShopInfo (shopInfo);
 		GlobalUI.reference.SetState (GlobalUI.States.Shop);
 	}
 }

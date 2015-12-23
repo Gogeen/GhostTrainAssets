@@ -5,16 +5,18 @@ using System.Collections.Generic;
 public class InventoryUI : MonoBehaviour {
 
 	public UILabel statsLabel;
-	public GameObject DescriptionWindow;
-	public GameObject CompareWindow;
-	static Item itemToCompare = null;
+	public DescriptionWindowController DescriptionWindow;
+	public DescriptionWindowController CompareWindow;
+	static InventoryItemObject itemToCompare = null;
 
 	public UIStat PowerStat;
 	public UIStat WeightStat;
 	public UIStat MagicPowerStat;
 	public UIStat SpeedStat;
 	public List<WagonUIStat> WagonsStat = new List<WagonUIStat>();
-	
+
+	public UIScrollView inventoryScrollView;
+
 	[System.Serializable]
 	public class WagonUIStat
 	{
@@ -35,109 +37,49 @@ public class InventoryUI : MonoBehaviour {
 		return false;
 	}
 
-	public static void SetItemToCompare(Item item)
+	public static void SetItemToCompare(InventoryItemObject item)
 	{
 		//Debug.Log ("item to compare set");
 		itemToCompare = item;
 	}
-
-	public void ShowItemDescription(Item UIitem, bool isCompareWindow = false)
+	public static void ResetItemToCompare()
 	{
-		InventoryItem item = UIitem.reference;
+		//Debug.Log ("item to compare set");
+		itemToCompare = null;
+	}
 
-		UILabel descriptionLabel;
-		if (isCompareWindow)
-		{
-			CompareWindow.SetActive(true);
-			descriptionLabel = CompareWindow.transform.GetChild (0).GetComponent<UILabel> ();
-		}
-		else
-		{
-			DescriptionWindow.SetActive (true);
-			descriptionLabel = DescriptionWindow.transform.GetChild (0).GetComponent<UILabel> ();
-			if (itemToCompare != null)
-				ShowItemDescription(itemToCompare, true);
-		}
-		descriptionLabel.text = "";
-
-		descriptionLabel.text += "Weight: " + item.costInfo.weight + "\n"; 
-		if (IsShowStatInfo(item.costInfo.passengerSpace))
-			descriptionLabel.text += "Passenger Space: " + item.costInfo.passengerSpace + "\n";
-
-		descriptionLabel.text += "Durability: " + (item.durabilityInfo.current/item.durabilityInfo.max)*100 + "%" + "\n"; 
-
-		if (IsShowStatInfo(InventorySystem.reference.GetItemTotalPrice(UIitem)))
-			descriptionLabel.text += "Price: " + InventorySystem.reference.GetItemTotalPrice(UIitem) + "\n";
-
-
-		if (IsShowStatInfo(item.bonusInfo.power))
-			descriptionLabel.text += "Bonus Power: " + item.bonusInfo.power + "\n"; 
-		if (IsShowStatInfo(item.bonusInfo.maxWeight))
-			descriptionLabel.text += "Bonus Max Weight: " + item.bonusInfo.maxWeight + "\n";
-		if (IsShowStatInfo(item.bonusInfo.attraction))
-			descriptionLabel.text += "Bonus Attraction: " + item.bonusInfo.attraction + "\n";
-		if (IsShowStatInfo(item.bonusInfo.maxPassengerSpace))
-			descriptionLabel.text += "Bonus Max Passenger Space: " + item.bonusInfo.maxPassengerSpace + "\n";
-		if (IsShowStatInfo(item.bonusInfo.magicPower))
-			descriptionLabel.text += "Bonus Magic Power: " + item.bonusInfo.magicPower + "\n";
-		if (IsShowStatInfo(item.bonusInfo.maxSpeed))
-			descriptionLabel.text += "Bonus Max Speed: " + item.bonusInfo.maxSpeed + "\n";
-		if (IsShowStatInfo(item.bonusInfo.equipmentDurability))
-			descriptionLabel.text += "Bonus Equipment Durability: " + item.bonusInfo.equipmentDurability + "\n";
-
-
-		descriptionLabel.text += "\n" + item.uiInfo.description;
-
-		if (isCompareWindow)
-		{
-			CompareWindow.transform.position = DescriptionWindow.transform.position;
-			CompareWindow.transform.localPosition -= new Vector3(CompareWindow.transform.FindChild("Background").GetComponent<UISprite>().localSize.x,0,0);
-		}
-		else
-		{
-			// set window near mouse
-			DescriptionWindow.transform.position = UICamera.lastHit.point;
-			DescriptionWindow.transform.localPosition += new Vector3 (10,-10,0);
-			DescriptionWindow.transform.localPosition += new Vector3 (0,DescriptionWindow.transform.FindChild("Background").GetComponent<UISprite>().localSize.y,0);
-
-			UIRoot root = null;
-			Transform currentObject = transform;
-			while (true) 
-			{
-				if (currentObject.GetComponent<UIRoot>())
-				{
-					root = currentObject.GetComponent<UIRoot>();
-					break;
-				}
-				currentObject = currentObject.parent;
-			}
-			//Debug.Log (root.manualWidth);
-			if (DescriptionWindow.transform.localPosition.x - 10 + DescriptionWindow.transform.FindChild("Background").GetComponent<UISprite>().localSize.x > root.manualWidth/2)
-			{
-				DescriptionWindow.transform.localPosition += new Vector3 (-DescriptionWindow.transform.FindChild("Background").GetComponent<UISprite>().localSize.x,0,0);
-			}
-			if (DescriptionWindow.transform.localPosition.y + 10 > root.manualHeight/2)
-			{
-				DescriptionWindow.transform.localPosition += new Vector3 (0,-DescriptionWindow.transform.FindChild("Background").GetComponent<UISprite>().localSize.y,0);
-			}
-		}
+	public void ShowItemDescription(InventoryItemObject itemObject)
+	{
+		DescriptionWindow.ShowItemDescription (itemObject);
+		if (itemToCompare != null)
+			CompareWindow.ShowItemDescription (itemToCompare, DescriptionWindow.transform.localPosition);
+		
 	}
 
 	public void HideItemDescription()
 	{
-		DescriptionWindow.SetActive (false);
-		CompareWindow.SetActive(false);
+		DescriptionWindow.HideItemDescription ();
+		CompareWindow.HideItemDescription();
 
 	}
 
 	public void PrintStats()
 	{
 		SpeedStat.description.text = "Speed:";
-		SpeedStat.value.text = PlayerSaveData.reference.trainData.GetCurrentSpeed().ToString();
-		if (PlayerSaveData.reference.trainData.GetSpeedPenalty() > 0)
+		float currentSpeed = PlayerSaveData.reference.trainData.GetCurrentSpeed ();
+		if (PlayerTrain.reference != null) {
+			currentSpeed *= (100 - PlayerTrain.reference.speedDebuffPercent) / 100f;
+		}
+		SpeedStat.value.text = (Mathf.Round(currentSpeed * 10f)/10f).ToString();
+
+		float currentPenalty = PlayerSaveData.reference.trainData.GetSpeedPenalty ();
+		if (PlayerTrain.reference != null) {
+			currentPenalty += PlayerSaveData.reference.trainData.GetCurrentSpeed () * (PlayerTrain.reference.speedDebuffPercent / 100f);
+		}
+		if (currentPenalty > 0)
 		{
 			SpeedStat.penalty.color = Color.red;
-			SpeedStat.penalty.text = "(-" + PlayerSaveData.reference.trainData.GetSpeedPenalty().ToString() + ")";
+			SpeedStat.penalty.text = "(-" + (Mathf.Round(currentPenalty * 10f)/10f).ToString() + ")";
 		}
 		else
 		{
@@ -173,7 +115,7 @@ public class InventoryUI : MonoBehaviour {
 	{
 		if (UICamera.hoveredObject == null)
 			return false;
-		if (UICamera.hoveredObject.GetComponent<Item> () == null)
+		if (UICamera.hoveredObject.GetComponent<InventoryItemObject> () == null)
 			return false;
 		return true;
 	}
@@ -184,11 +126,18 @@ public class InventoryUI : MonoBehaviour {
 
 		if (IsHoveringItem())
 		{
-			ShowItemDescription(UICamera.hoveredObject.GetComponent<Item>());
+			if (Input.GetMouseButton (0)) {
+				HideItemDescription();
+				return;
+			}
+			ShowItemDescription(UICamera.hoveredObject.GetComponent<InventoryItemObject>());
 		}
 		else
 		{
+			if (Input.GetMouseButtonDown (0) || Input.GetMouseButtonDown (1))
+				ResetItemToCompare ();
 			HideItemDescription();
 		}
+
 	}
 }

@@ -3,6 +3,13 @@ using System.Collections;
 
 public class WaystationController : MonoBehaviour {
 
+	public static WaystationController reference;
+
+	public string name;
+	public WorldTowns.PassengerInfo passengerInfo;
+	public VendorShop shopInfo;
+
+
 	public void Repair()
 	{
 		//TrainTimeScript.reference.AddTime (-15);

@@ -19,6 +19,7 @@ public class InventoryItem  {
 	public Cost costInfo;
 	public Bonus bonusInfo;
 	public UIInfo uiInfo;
+	public Extra extraInfo;
 
 	[System.Serializable]
 	public class Durability
@@ -72,6 +73,9 @@ public class InventoryItem  {
 		public float maxSpeed;
 		public float equipmentDurability;
 
+		public float repairPricePercent;
+		public float tradePricePercent;
+
 		public Bonus()
 		{
 			
@@ -87,6 +91,8 @@ public class InventoryItem  {
 			maxPassengerSpace = another.maxPassengerSpace;
 			maxSpeed = another.maxSpeed;
 			equipmentDurability = another.equipmentDurability;
+			repairPricePercent = another.repairPricePercent;
+			tradePricePercent = another.tradePricePercent;
 		}
 	}
 
@@ -110,6 +116,25 @@ public class InventoryItem  {
 		}
 	}
 
+	[System.Serializable]
+	public class Extra
+	{
+		public bool Unbreakable;
+		public bool MoreEffectiveWithTime;
+		[Range(0,1)]public float EfficiencyModifier;
+		public float maxPotentialModifier;
+		public int TimeToMaxPotential;
+
+		public Extra(Extra another)
+		{
+			Unbreakable = another.Unbreakable;
+			MoreEffectiveWithTime = another.MoreEffectiveWithTime;
+			EfficiencyModifier = another.EfficiencyModifier;
+			maxPotentialModifier = another.maxPotentialModifier;
+			TimeToMaxPotential = another.TimeToMaxPotential;
+		}
+	}
+
 	public InventoryItem()
 	{
 		
@@ -124,5 +149,6 @@ public class InventoryItem  {
 		costInfo = new Cost(another.costInfo);
 		bonusInfo = new Bonus(another.bonusInfo);
 		uiInfo = new UIInfo(another.uiInfo);
+		extraInfo = new Extra (another.extraInfo);
 	}
 }

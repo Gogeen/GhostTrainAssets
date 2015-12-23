@@ -4,6 +4,21 @@ using System.Collections.Generic;
 
 public class InventorySystem : MonoBehaviour {
 
+	public enum SlotType
+	{
+		Equipment,
+		Wagon,
+		Shop,
+		Unknown
+	}
+
+	public class SlotInfo
+	{
+		public SlotType type;
+		public int wagonIndex;
+		public int slotIndex;
+	}
+
 	public static InventorySystem reference = null;
 	public Camera UICamera;
 	public GameObject baseItem;
@@ -17,67 +32,213 @@ public class InventorySystem : MonoBehaviour {
 
 	bool selectingItemToRepair = false;
 
-	void CheckSynergy(int wagonIndex)
+	public Transform GetSlot(SlotType type, int index, int wagonIndex = 0)
 	{
-		int synergyItemsCount = 0;
-		foreach(Transform slot in wagonUIs[wagonIndex].slots)
-		{
-			if (wagonUIs[wagonIndex].GetUIItemInSlot(slot) != null)
+		switch (type) {
+		case SlotType.Equipment:
+			{return equipmentUI.slots [index].slot;}
+		case SlotType.Wagon:
+			{return wagonUIs[wagonIndex].slots [index];}
+		case SlotType.Shop:
+			{return shopInventory.slots [index];}
+		}
+		Debug.Log ("GetSlot Broken!");
+		return null;
+	}
+
+	public SlotInfo GetSlotInfo(Transform slot)
+	{
+		SlotInfo slotInfo = new SlotInfo ();
+		int slotIndex = 0;
+		foreach (InventoryEquipmentUI.SlotInfo info in equipmentUI.slots) {
+			if (slot == info.slot)
 			{
-				if (wagonUIs[wagonIndex].GetUIItemInSlot(slot).reference.bonusInfo.attraction > 0)
-				{
-					synergyItemsCount += 1;
-				}
-				else
-				{
-					RemoveSynergyEffect(wagonIndex);
-					//Debug.Log ("synergy doesn't work, incorrect items in inventory");
-					return;
-				}
+				slotInfo.type = SlotType.Equipment;
+				slotInfo.slotIndex = slotIndex;
+				slotInfo.wagonIndex = -1;
+				return slotInfo;
+			}
+			slotIndex += 1;
+		}
+
+		int wagonIndex = 0;
+		foreach (WagonInventoryUI wagonUI in wagonUIs) {
+			if (wagonUI.slots.Contains (slot)) {
+				slotInfo.type =  SlotType.Wagon;
+				slotInfo.slotIndex = wagonUI.slots.IndexOf(slot);
+				slotInfo.wagonIndex = wagonIndex;
+				return slotInfo;
+			}
+			wagonIndex += 1;
+		}
+		if (shopInventory.slots.Contains (slot)) {
+			slotInfo.type =  SlotType.Shop;
+			slotInfo.slotIndex = shopInventory.slots.IndexOf(slot);
+			slotInfo.wagonIndex = -1;
+			return slotInfo;
+		}
+		Debug.Log ("GetSlotType Broken! "+slot);
+		return null;
+	}
+
+	public bool IsSlotEmpty(Transform slot)
+	{
+		if (slot.GetComponent<UIDragDropContainer> ().reparentTarget.childCount > 0)
+			return false;
+		return true;
+	}
+
+	public bool CanPutInSlot(Transform slotToPut, InventoryItemObject item)
+	{
+		SlotInfo slotInfo = GetSlotInfo (slotToPut);
+		if (slotInfo.type == SlotType.Equipment) {
+			if (item.info.type == equipmentUI.GetSlotType (slotToPut))
+				return true;
+			return false;
+		}else if (slotInfo.type == SlotType.Wagon) {
+			WagonInventoryUI wagon = wagonUIs [slotInfo.wagonIndex];
+			return wagon.CanPutInSlot (slotToPut,item.info.uiInfo.size);
+		}else if (slotInfo.type == SlotType.Shop) {
+			WagonInventoryUI wagon = shopInventory;
+			return wagon.CanPutInSlot (slotToPut,item.info.uiInfo.size);
+		}
+		return false;
+	}
+
+	public InventoryItemObject GetItemObjectInSlot(Transform slot)
+	{
+		if (IsSlotEmpty (slot))
+			return null;
+		return slot.GetComponent<UIDragDropContainer>().reparentTarget.GetChild(0).GetComponent<InventoryItemObject>();
+	}
+
+	public enum SynergyType
+	{
+		Attraction,
+		MagicPower
+	}
+
+	public void CheckSynergy(int wagonIndex)
+	{
+		Debug.Log ("synergy check");
+		// check attraction synergy
+		bool isSynergy = true;
+		int synergyItemsCount = 0;
+		foreach(InventoryItemObject item in PlayerSaveData.reference.wagonData[wagonIndex].items)
+		{
+			if (item.info.bonusInfo.attraction > 0){
+				synergyItemsCount += 1;
+			}else{
+				isSynergy = false;
+				break;
+			}
+
+		}
+		if (synergyItemsCount <= 1)
+			isSynergy = false;
+		if (isSynergy)
+			ApplySynergyEffect (SynergyType.Attraction, wagonIndex, synergyItemsCount);
+		else 
+			RemoveSynergyEffect(SynergyType.Attraction, wagonIndex);
+
+		// check magicPower synergy
+		isSynergy = true;
+		synergyItemsCount = 0;
+		foreach(InventoryItemObject item in PlayerSaveData.reference.wagonData[wagonIndex].items)
+		{
+			Debug.Log (item.info.name);
+			if (item.info.bonusInfo.magicPower > 0){
+				synergyItemsCount += 1;
+			}else{
+				isSynergy = false;
+				break;
+			}
+
+		}
+		if (synergyItemsCount <= 1)
+			isSynergy = false;
+		if (isSynergy)
+			ApplySynergyEffect (SynergyType.MagicPower, wagonIndex, synergyItemsCount);
+		else 
+			RemoveSynergyEffect(SynergyType.MagicPower, wagonIndex);
+		
+	}
+
+	void ApplySynergyEffect(SynergyType type, int wagonIndex, int itemsCount)
+	{
+		Debug.Log ("applying synergy");
+		if (type == SynergyType.Attraction) {
+			PlayerSaveData.reference.wagonData [wagonIndex].attraction -= PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction;
+			PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction = itemsCount * synergyModifier * PlayerSaveData.reference.wagonData [wagonIndex].attraction / 100;
+			PlayerSaveData.reference.wagonData [wagonIndex].attraction += PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction;
+		} else if (type == SynergyType.MagicPower) {
+			PlayerSaveData.reference.trainData.magicPower -= PlayerSaveData.reference.wagonData [wagonIndex].synergyMagicPower;
+			PlayerSaveData.reference.wagonData [wagonIndex].synergyMagicPower = itemsCount * synergyModifier * PlayerSaveData.reference.trainData.magicPower / 100;
+			PlayerSaveData.reference.trainData.magicPower += PlayerSaveData.reference.wagonData [wagonIndex].synergyMagicPower;
+		}
+
+	}
+
+	void RemoveSynergyEffect(SynergyType type, int wagonIndex)
+	{
+		if (type == SynergyType.Attraction) {
+			PlayerSaveData.reference.wagonData [wagonIndex].attraction -= PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction;
+			PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction = 0;
+		} else if (type == SynergyType.MagicPower) {
+			PlayerSaveData.reference.trainData.magicPower -= PlayerSaveData.reference.wagonData [wagonIndex].synergyMagicPower;
+			PlayerSaveData.reference.wagonData [wagonIndex].synergyMagicPower = 0;
+		}
+
+	}
+
+	public void CheckSigns()
+	{
+		foreach (WagonInventoryUI wagon in wagonUIs) {
+			wagon.CheckSigns ();
+		}
+	}
+
+	public int GetTotalRepairCost()
+	{
+		float totalRepairCost = 0;
+		foreach(PlayerSaveData.WagonData wagon in PlayerSaveData.reference.wagonData){
+			foreach(InventoryItemObject item in wagon.items){
+				totalRepairCost += item.GetRepairCost ();
 			}
 		}
-		ApplySynergyEffect (wagonIndex, synergyItemsCount);
-	}
-
-	void ApplySynergyEffect(int wagonIndex, int itemsCount)
-	{
-		PlayerSaveData.reference.wagonData [wagonIndex].attraction -= PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction;
-		PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction = itemsCount * synergyModifier;
-		PlayerSaveData.reference.wagonData [wagonIndex].attraction += PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction;
-
-	}
-
-	void RemoveSynergyEffect(int wagonIndex)
-	{
-		PlayerSaveData.reference.wagonData [wagonIndex].attraction -= PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction;
-		PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction = 0;
-
+		foreach(InventoryItemObject item in PlayerSaveData.reference.trainData.equippedItems){
+			totalRepairCost += item.GetRepairCost ();
+		}
+		return (int)totalRepairCost;
 	}
 
 	public void RepairWholeInventory()
 	{
+		float totalRepairCost = 0;
 		foreach(PlayerSaveData.WagonData wagon in PlayerSaveData.reference.wagonData)
 		{
-			foreach(Item item in wagon.items)
+			foreach(InventoryItemObject item in wagon.items)
 			{
-				RepairItem(item.reference);
+				totalRepairCost += item.GetRepairCost ();
+				item.Repair ();
 			}
 		}
-		foreach(InventoryItem item in PlayerSaveData.reference.trainData.equippedItems)
+		foreach(InventoryItemObject item in PlayerSaveData.reference.trainData.equippedItems)
 		{
-			RepairItem(item);
+			totalRepairCost += item.GetRepairCost ();
+			item.Repair ();
 		}
+		TrainTimeScript.reference.SimulateWaitForPassengers (totalRepairCost);
+		selectingItemToRepair = false;
+
 	}
 
-	public void RepairItem(InventoryItem item)
+	public void RepairItem(InventoryItemObject item)
 	{
-		// let repair cost be 1 sec for now
-		if (TrainTimeScript.reference.HaveEnoughTime(1))
-		{
-			item.durabilityInfo.current = item.durabilityInfo.max;
-			TrainTimeScript.reference.AddTime (-1);
-		}
+		TrainTimeScript.reference.SimulateWaitForPassengers (item.GetRepairCost());
+		item.Repair ();
 		selectingItemToRepair = false;
+
 	}
 
 	public bool IsSelectingItemToRepair()
@@ -90,12 +251,9 @@ public class InventorySystem : MonoBehaviour {
 		selectingItemToRepair = true;
 	}
 
-	public void BreakItem(InventoryItem item, float value)
+	public void BreakItem(InventoryItemObject item, float value)
 	{
-		item.durabilityInfo.current -= value;
-		if (item.durabilityInfo.current < 0)
-			item.durabilityInfo.current = 0;
-		Debug.Log ("breaking "+item.name+" for "+value);
+		item.Break (value);
 	}
 
 	public void BreakWholeInventory(float value)
@@ -104,18 +262,33 @@ public class InventorySystem : MonoBehaviour {
 		{
 			foreach(Transform slot in wagonUI.slots)
 			{
-				if (wagonUI.GetUIItemInSlot(slot) != null)
-					BreakItem(wagonUI.GetUIItemInSlot(slot).reference, value);
+				if (GetItemObjectInSlot(slot) != null)
+					BreakItem(GetItemObjectInSlot(slot), value);
 			}
 		}
-		foreach (InventoryItem equippedItem in PlayerSaveData.reference.trainData.equippedItems)
+		foreach (InventoryItemObject equippedItem in PlayerSaveData.reference.trainData.equippedItems)
 		{
 			if (equippedItem != null)
 				BreakItem(equippedItem, value);
 		}
 	}
 
-	public InventoryItem GetRandomItem()
+	public InventoryItemObject FindItem(string name)
+	{
+		foreach (InventoryItemObject item in PlayerSaveData.reference.trainData.equippedItems) {
+			if (item.info.name == name)
+				return item;
+		}
+		foreach (PlayerSaveData.WagonData wagon in PlayerSaveData.reference.wagonData) {
+			foreach (InventoryItemObject item in wagon.items) {
+				if (item.info.name == name)
+					return item;
+			}
+		}
+		return null;
+	}
+
+	public InventoryItemObject GetRandomItem()
 	{
 		// get total items count
 		int itemsCount = 0;
@@ -123,11 +296,11 @@ public class InventorySystem : MonoBehaviour {
 		{
 			foreach(Transform slot in wagonUI.slots)
 			{
-				if (wagonUI.GetUIItemInSlot (slot) != null)
+				if (GetItemObjectInSlot(slot) != null)
 					itemsCount += 1;
 			}
 		}
-		foreach (InventoryItem equippedItem in PlayerSaveData.reference.trainData.equippedItems)
+		foreach (InventoryItemObject equippedItem in PlayerSaveData.reference.trainData.equippedItems)
 		{
 			if (equippedItem != null)
 				itemsCount += 1;
@@ -138,17 +311,17 @@ public class InventorySystem : MonoBehaviour {
 		{
 			foreach(Transform slot in wagonUI.slots)
 			{
-				if (wagonUI.GetUIItemInSlot (slot) != null) {
+				if (GetItemObjectInSlot(slot) != null) {
 					if (itemIndexToBreak > 0) {
 						itemIndexToBreak -= 1;
 						continue;
 					} else {
-						return wagonUI.GetUIItemInSlot (slot).reference;
+						return GetItemObjectInSlot(slot);
 					}
 				}
 			}
 		}
-		foreach (InventoryItem equippedItem in PlayerSaveData.reference.trainData.equippedItems)
+		foreach (InventoryItemObject equippedItem in PlayerSaveData.reference.trainData.equippedItems)
 		{
 			if (equippedItem != null) {
 				if (itemIndexToBreak > 0) {
@@ -163,268 +336,106 @@ public class InventorySystem : MonoBehaviour {
 		return null;
 	}
 
-	void ApplyTrainStats(InventoryItem item)
-	{
-		PlayerSaveData.reference.trainData.maxCrewCount += item.costInfo.crewSpace;
-
-		PlayerSaveData.reference.trainData.power += item.bonusInfo.power;
-		PlayerSaveData.reference.trainData.magicPower += item.bonusInfo.magicPower;
-		PlayerSaveData.reference.trainData.maxWeight += item.bonusInfo.maxWeight;
-		PlayerSaveData.reference.trainData.maxCrewCount += item.bonusInfo.maxCrewSpace;
-		PlayerSaveData.reference.trainData.maxSpeed += item.bonusInfo.maxSpeed;
-	}
-
-	void RemoveTrainStats(InventoryItem item)
-	{
-		PlayerSaveData.reference.trainData.maxCrewCount -= item.costInfo.crewSpace;
-
-		PlayerSaveData.reference.trainData.power -= item.bonusInfo.power;
-		PlayerSaveData.reference.trainData.magicPower -= item.bonusInfo.magicPower;
-		PlayerSaveData.reference.trainData.maxWeight -= item.bonusInfo.maxWeight;
-		PlayerSaveData.reference.trainData.maxCrewCount -= item.bonusInfo.maxCrewSpace;
-		PlayerSaveData.reference.trainData.maxSpeed -= item.bonusInfo.maxSpeed;
-	}
-
-	void ApplyWagonStats(InventoryItem item, int wagonIndex)
-	{
-		PlayerSaveData.reference.wagonData[wagonIndex].attraction += item.bonusInfo.attraction;
-		PlayerSaveData.reference.wagonData[wagonIndex].currentPassengersCount += item.costInfo.passengerSpace;
-		PlayerSaveData.reference.wagonData[wagonIndex].maxPassengersCount += item.bonusInfo.maxPassengerSpace;
-	}
-
-	void RemoveWagonStats(InventoryItem item, int wagonIndex)
-	{
-		PlayerSaveData.reference.wagonData[wagonIndex].attraction -= item.bonusInfo.attraction;
-		PlayerSaveData.reference.wagonData[wagonIndex].currentPassengersCount -= item.costInfo.passengerSpace;
-		PlayerSaveData.reference.wagonData[wagonIndex].maxPassengersCount -= item.bonusInfo.maxPassengerSpace;
-	}
-
 	public void Clear()
 	{
-		foreach (WagonInventoryUI wagonUI in wagonUIs)
-		{
-			foreach(Transform slot in wagonUI.slots)
-			{
-				if (wagonUI.GetUIItemInSlot(slot) != null)
-				{
-					InventoryItem item = wagonUI.GetUIItemInSlot(slot).reference;
-					if (item.type == InventoryItem.Type.NonEquippable)
-					{
-						RemoveTrainStats(item);
-					}
-					Destroy(wagonUI.GetUIItemInSlot(slot).gameObject);
-				}
-					
+		foreach (WagonInventoryUI wagonUI in wagonUIs){
+			foreach(Transform slot in wagonUI.slots){
+				InventoryItemObject item = GetItemObjectInSlot(slot);
+				if (item != null){
+					Destroy(item.gameObject);
+				}	
 			}
 		}
 		foreach(InventoryEquipmentUI.SlotInfo info in equipmentUI.slots)
 		{
 			Transform slot = info.slot;
-			if (equipmentUI.GetUIItemInSlot(slot) != null)
+			InventoryItemObject item = GetItemObjectInSlot(slot);
+			if (item != null)
 			{
-				InventoryItem item = equipmentUI.GetUIItemInSlot(slot).reference;
-				RemoveTrainStats(item);
-				Destroy(equipmentUI.GetUIItemInSlot(slot).gameObject);
+				Destroy(item.gameObject);
 			}
 		}
 	}
 
-	public void InitItem(InventoryItem item, bool isEquip, int wagonIndex = -1, int slotIndex = -1)
+	public void InitItem(InventoryItem info, SlotType slotType, int wagonIndex = -1, int slotIndex = -1)
 	{
-		GameObject UIItem = Instantiate (baseItem) as GameObject;
-		UIItem.GetComponent<Item> ().reference = new InventoryItem(item);
-		UIItem.GetComponent<ItemDragDropScript> ().uiCamera = UICamera;
+		GameObject Item = Instantiate (baseItem) as GameObject;
+		Item.GetComponent<InventoryItemObject> ().info = new InventoryItem(info);
+		Item.GetComponent<ItemDragDropScript> ().uiCamera = UICamera;
+		Item.GetComponent<CustomDragScrollView> ().scrollView = GetComponent<InventoryUI> ().inventoryScrollView;
 
 		//!!! put item in available inventory slot
-		if (!isEquip)
-			PutUIItemInSlot (UIItem, wagonIndex, slotIndex);
-		else
-		{
-			Equip (UIItem.GetComponent<Item> ().reference);
-			equipmentUI.InitItem(UIItem);
-		}
+		if (slotType == SlotType.Wagon) {
+			Transform slot = FindEmptySlot (Item.GetComponent<InventoryItemObject> (), slotType, wagonIndex, slotIndex);
+			Item.GetComponent<InventoryItemObject> ().Place (slot);
 
-		PlayerSaveData.reference.trainData.currentWeight += item.costInfo.weight;
-		if (item.type == InventoryItem.Type.NonEquippable)
-		{
-			ApplyTrainStats(item);
-		}
-	}
-
-	public void MoveItem(InventoryItem item, WagonInventoryUI fromWagon, WagonInventoryUI toWagon)
-	{
-		if (toWagon != shopInventory)
-		{
-			ApplyWagonStats (item, wagonUIs.IndexOf(toWagon));
-			CheckSynergy(wagonUIs.IndexOf(toWagon));
-		}
-		if (fromWagon != shopInventory)
-		{
-			RemoveWagonStats (item, wagonUIs.IndexOf(fromWagon));
-			CheckSynergy(wagonUIs.IndexOf(fromWagon));
+			//PutUIItemInSlot (Item, wagonIndex, slotIndex);
+		} else if (slotType == SlotType.Equipment) {
+			Item.GetComponent<InventoryItemObject> ().Place (GetSlot (SlotType.Equipment, Item.GetComponent<InventoryItemObject> ().GetEquipmentSlotIndex ()));
+			//Item.GetComponent<InventoryItemObject> ().Equip();
+		} else if (slotType == SlotType.Shop) {
+			Transform slot = FindEmptySlot (Item.GetComponent<InventoryItemObject> (), slotType, wagonIndex, slotIndex);
+			Item.GetComponent<InventoryItemObject> ().Place (slot);
 		}
 	}
 
-	void SetupUIItem(GameObject item, int finalWagonIndex, int finalSlotIndex)
+	public Transform FindEmptySlot(InventoryItemObject item, SlotType type, int wagonIndex = -1, int slotIndex = -1)
 	{
-		ApplyWagonStats (item.GetComponent<Item>().reference, finalWagonIndex);
-		CheckSynergy(finalWagonIndex);
-
-		item.GetComponent<Item> ().wagonIndex = finalWagonIndex;
-		item.GetComponent<Item> ().slotIndex = finalSlotIndex;
-		wagonUIs[finalWagonIndex].InitItem(item);
-		PlayerSaveData.reference.wagonData [finalWagonIndex].items.Add (item.GetComponent<Item> ());
-	}
-
-	void PutUIItemInSlot(GameObject item, int wagonIndex = -1, int slotIndex = -1)
-	{
-
+		WagonInventoryUI wagon = null;
+		if (type == SlotType.Wagon) {
+			if (wagonIndex > -1 && wagonIndex < wagonUIs.Count)
+				wagon = wagonUIs [wagonIndex];
+			else 
+				wagon = wagonUIs [0];
+		}
+		else if (type == SlotType.Shop)
+			wagon = shopInventory;
+		
 		if (wagonIndex > -1 && wagonIndex < wagonUIs.Count)
 		{
 			if (slotIndex > -1 && slotIndex < wagonUIs[wagonIndex].slots.Count)
 			{
-				if (wagonUIs[wagonIndex].IsEmptySlotForItem(slotIndex, item))
+				// if slot and wagon indexes is correct then return specific slot
+				if (wagon.IsEmptySlotForItem(slotIndex, item))
 				{
 					// all right
-					SetupUIItem(item, wagonIndex, slotIndex);
-					return;
+					//SetupUIItem(item, wagonIndex, slotIndex);
+					return GetSlot(type, slotIndex, wagonIndex);
 				}
 			}
-			int emptySlotIndex = wagonUIs[wagonIndex].FindEmptySlotForItem(item);
+
+			// if only wagon index is correct then return first empty slot in that wagon
+			int emptySlotIndex = wagon.FindEmptySlotForItem(item);
 			if (emptySlotIndex != -1)
 			{
 				// all right
-				SetupUIItem(item, wagonIndex, emptySlotIndex);
-				return;
+				//SetupUIItem(item, wagonIndex, emptySlotIndex);
+				return GetSlot(type, emptySlotIndex, wagonIndex);
 			}
 		}
-		// find an empty slot
+
+		// else return completely first empty slot
+		// should work only with player wagons, not shop
 		for (int checkingWagonIndex = 0;  checkingWagonIndex < wagonUIs.Count; checkingWagonIndex++)
 		{
-			int emptySlotIndex = wagonUIs[checkingWagonIndex].FindEmptySlotForItem(item);
+			if (type == SlotType.Wagon) {
+				wagon = wagonUIs [checkingWagonIndex];
+			}
+			int emptySlotIndex = wagon.FindEmptySlotForItem(item);
 			if (emptySlotIndex != -1)
 			{
-				SetupUIItem(item, checkingWagonIndex, emptySlotIndex);
+				//SetupUIItem(item, checkingWagonIndex, emptySlotIndex);
 
-				return;
+				return GetSlot(type, emptySlotIndex, checkingWagonIndex);
 			}
 		}
 		Debug.Log ("no inventory space for item");
+		return null;
 	}
 
-	public bool IsEquipped(InventoryItem item)
-	{
-		switch(item.type)
-		{
-		case InventoryItem.Type.Slot1: 
-		{
-			return item == PlayerSaveData.reference.trainData.equippedItems[0];
-		}
-		case InventoryItem.Type.Slot2: 
-		{
-			return item == PlayerSaveData.reference.trainData.equippedItems[1];
-		}
-		case InventoryItem.Type.Slot3: 
-		{
-			return item == PlayerSaveData.reference.trainData.equippedItems[2];
-		}
-		}
-		return false;
-	}
 
-	public void Equip(InventoryItem item)
-	{
-		if (item.type == InventoryItem.Type.NonEquippable)
-		{
-			Debug.Log ("Item cant be equipped!");
-			return;
-		}
-		ApplyTrainStats (item);
 
-		switch (item.type)
-		{
-		case InventoryItem.Type.Slot1: 
-		{
-			if (PlayerSaveData.reference.trainData.equippedItems[0] != null)
-			{
-				Unequip(0);
-			} 
-			PlayerSaveData.reference.trainData.equippedItems[0] = item; 
-			break;
-		}
-		case InventoryItem.Type.Slot2: 
-		{
-			if (PlayerSaveData.reference.trainData.equippedItems[1] != null)
-			{
-				Unequip(1);
-			} 
-			PlayerSaveData.reference.trainData.equippedItems[1] = item; 
-			break;
-		}
-		case InventoryItem.Type.Slot3: 
-		{
-			if (PlayerSaveData.reference.trainData.equippedItems[2] != null)
-			{
-				Unequip(2);
-			} 
-			PlayerSaveData.reference.trainData.equippedItems[2] = item; 
-			break;
-		}
-		}
-		
-		if (item.bonusInfo.equipmentDurability != 0)
-		{
-			foreach (InventoryItem equippedItem in PlayerSaveData.reference.trainData.equippedItems)
-			{
-				if (equippedItem == null)
-					continue;
-				equippedItem.durabilityInfo.max += item.bonusInfo.equipmentDurability;
-				equippedItem.durabilityInfo.current += item.bonusInfo.equipmentDurability;
-			}
-		}
-		foreach (InventoryItem equippedItem in PlayerSaveData.reference.trainData.equippedItems)
-		{
-			if (equippedItem == null)
-				continue;
-			if (equippedItem.bonusInfo.equipmentDurability != 0)
-			{
-				item.durabilityInfo.max += equippedItem.bonusInfo.equipmentDurability;
-				item.durabilityInfo.current += equippedItem.bonusInfo.equipmentDurability;
-			}
-		}
-		//!!! put item in specific equipment slot
 
-	}
-
-	public void Unequip(int slotIndex)
-	{
-		InventoryItem item = PlayerSaveData.reference.trainData.equippedItems [slotIndex];
-		
-		RemoveTrainStats (item);
-
-		if (item.bonusInfo.equipmentDurability != 0)
-		{
-			foreach (InventoryItem equippedItem in PlayerSaveData.reference.trainData.equippedItems)
-			{
-				if (equippedItem == null)
-					continue;
-				equippedItem.durabilityInfo.current -= item.bonusInfo.equipmentDurability;
-				equippedItem.durabilityInfo.max -= item.bonusInfo.equipmentDurability;
-			}
-		}
-		foreach (InventoryItem equippedItem in PlayerSaveData.reference.trainData.equippedItems)
-		{
-			if (equippedItem == null)
-				continue;
-			if (equippedItem.bonusInfo.equipmentDurability != 0)
-			{
-				item.durabilityInfo.max -= equippedItem.bonusInfo.equipmentDurability;
-				item.durabilityInfo.current -= equippedItem.bonusInfo.equipmentDurability;
-			}
-		}
-		PlayerSaveData.reference.trainData.equippedItems[slotIndex] = null;
-		//!!! put item in available inventory slot
-	}
 
 	public bool IsShopActive()
 	{
@@ -440,72 +451,65 @@ public class InventorySystem : MonoBehaviour {
 	public void LoadShopInfo(VendorShop info)
 	{
 		vendorShopInfo = info;
-
 	}
 
-	public void OpenShop()
+	public VendorShop GetVendorShopInfo()
 	{
+		return vendorShopInfo;
+	}
+
+	public IEnumerator InitShop()
+	{
+		foreach(Transform slot in shopInventory.slots){
+			InventoryItemObject item = GetItemObjectInSlot(slot);
+			if (item != null){
+				Destroy(item.gameObject);
+			}	
+		}
+		yield return null;
 		foreach(VendorShop.ItemInfo info in vendorShopInfo.items)
 		{
 			for (int itemCounter = 0; itemCounter < info.quantity; itemCounter++)
 			{
 				InventoryItem item = ItemDatabase.reference.FindByIndex(info.index);
-				InitShopItem (item); // need to be initialized in shop inventory, not player inventory
+				InitItem (item, SlotType.Shop); // need to be initialized in shop inventory, not player inventory
 			}
 		}
+		Debug.Log ("init shop done");
+	}
+
+	public void OpenShop()
+	{
+		
 		if (!IsShopActive ())
 			ToggleShopUI ();
 	}
 
 	public void CloseShop()
 	{
-		shopInventory.Clear ();
+		//shopInventory.Clear ();
 		if (IsShopActive ())
 			ToggleShopUI ();
 	}
-
-	public void InitShopItem(InventoryItem item)
-	{
-		GameObject UIItem = Instantiate (baseItem) as GameObject;
-		UIItem.GetComponent<Item> ().reference = new InventoryItem(item);
-		UIItem.GetComponent<ItemDragDropScript> ().uiCamera = UICamera;
 		
-		PutUIItemInShopSlot (UIItem);
-	}
-
-	void PutUIItemInShopSlot(GameObject item)
-	{
-		int emptySlotIndex = shopInventory.FindEmptySlotForItem(item);
-		if (emptySlotIndex != -1)
-		{
-			item.GetComponent<Item> ().slotIndex = emptySlotIndex;
-			shopInventory.InitItem(item);
-			return;
-		}
-
-		Debug.Log ("no shop space for item");
-	}
-
-	public int GetItemTotalPrice(Item item)
+	public int GetItemTotalPrice(InventoryItemObject item)
 	{
 		if (!IsShopActive ())
 		{
 			//Debug.Log ("shop is not active");
-			return 0;
+			return item.info.costInfo.timePrice;
 		}
 		Transform slot = item.transform.parent.parent;
 		WagonInventoryUI inventory = slot.parent.parent.GetComponent<WagonInventoryUI>();
 		if (inventory == shopInventory) 
 		{
-			float buyMod = vendorShopInfo.FindInfoByIndex (item.reference.databaseIndex).buyModifier;
-			return (int)(item.reference.costInfo.timePrice * buyMod);
+			return item.GetBuyPrice ();
 		}
 		else
 		{
-			if (vendorShopInfo.FindInfoByIndex (item.reference.databaseIndex) != null)
+			if (vendorShopInfo.FindInfoByIndex (item.info.databaseIndex) != null)
 			{
-				float sellMod = vendorShopInfo.FindInfoByIndex (item.reference.databaseIndex).sellModifier;
-				return (int)(item.reference.costInfo.timePrice * sellMod);
+				return item.GetSellPrice ();
 			}
 			else
 			{
@@ -513,19 +517,5 @@ public class InventorySystem : MonoBehaviour {
 				return 0;
 			}
 		}
-	}
-
-	public void BuyItem(InventoryItem item)
-	{
-		float buyMod = vendorShopInfo.FindInfoByIndex (item.databaseIndex).buyModifier;
-		int totalPrice = (int)(item.costInfo.timePrice * buyMod);
-		TrainTimeScript.reference.AddTime (-totalPrice);
-	}
-
-	public void SellItem(InventoryItem item)
-	{
-		float sellMod = vendorShopInfo.FindInfoByIndex (item.databaseIndex).sellModifier;
-		int totalPrice = (int)(item.costInfo.timePrice * sellMod);
-		TrainTimeScript.reference.AddTime (totalPrice);
 	}
 }

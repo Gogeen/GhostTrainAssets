@@ -84,6 +84,7 @@ public class TextQuest : ScriptableObject {
     public class ResultNode
     {
         public string text;
+		public string description;
         public int index;
         public string functionName;
         public string GetText()
@@ -132,11 +133,15 @@ public class TextQuest : ScriptableObject {
 
 	public void ApplyResult(int index)
 	{
-		Debug.Log (FindResultNode(index).GetText());
+		if (FindResultNode (index) == null)
+			return;
 		if (name == "Girl")
 		{
 			if (index == 1)
 			{
+				if (InventorySystem.reference.FindItem ("фонарь") != null) {
+					Destroy (InventorySystem.reference.FindItem ("фонарь").gameObject);
+				}
 			}
 			else if (index == 2)
 			{

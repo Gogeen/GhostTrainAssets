@@ -14,20 +14,26 @@ public class TrainTimeScript : MonoBehaviour {
 
 	public float waitingTimeSpeedMultiplier;
 	public int passengerTickTime;
-	public int passengerTickMinPercent;
-	public int passengerTickMaxPercent;
-	public int passengerWaystationOutMinPercent;
-	public int passengerWaystationOutMaxPercent;
-	public int passengerTownOutMinPercent;
-	public int passengerTownOutMaxPercent;
 	public int basePassengerTimeIncome;
 	public float passengerTravelMultiplier;
+
+	public WorldTowns.PassengerInfo communityTimeInfo;
 
 	float passengersCame = 0;
 	int waitingTime = 0;
 	float passengersCameOut = 0;
 	IEnumerator WaitForPassengers()
 	{
+		int minPercent = 0;
+		int maxPercent = 0;
+		if (GlobalUI.reference.IsState (GlobalUI.States.Town)) {
+			minPercent = TownController.reference.passengerInfo.MinPercentIn;
+			maxPercent = TownController.reference.passengerInfo.MaxPercentIn;
+		} else if (GlobalUI.reference.IsState (GlobalUI.States.Waystation)) {
+			minPercent = WaystationController.reference.passengerInfo.MinPercentIn;
+			maxPercent = WaystationController.reference.passengerInfo.MaxPercentIn;
+		}
+
 		PlayerSaveData.PassengerData passengersData = PlayerSaveData.reference.passengerData;
 		if (passengersData.IsFull())
 		{
@@ -48,7 +54,8 @@ public class TrainTimeScript : MonoBehaviour {
 			if (waitingTime >= passengerTickTime)
 			{
 				waitingTime -= passengerTickTime;
-				float passengersComing = ((float)passengersData.GetMaxPassengers() * Random.Range (passengerTickMinPercent, passengerTickMaxPercent)) / 100;
+
+				float passengersComing = ((float)passengersData.GetMaxPassengers() * Random.Range (minPercent, maxPercent)) / 100;
 				passengersCame += passengersComing;
 
 				passengersCameShown += (int)passengersCame;
@@ -76,6 +83,50 @@ public class TrainTimeScript : MonoBehaviour {
 
 			}
 			yield return null;
+		}
+	}
+
+	public void SimulateWaitForPassengers(float time)
+	{
+		int minPercent = 0;
+		int maxPercent = 0;
+		minPercent = communityTimeInfo.MinPercentIn;
+		maxPercent = communityTimeInfo.MaxPercentIn;
+
+		PlayerSaveData.PassengerData passengersData = PlayerSaveData.reference.passengerData;
+		if (passengersData.IsFull())
+		{
+			return;
+		}
+		float waitingTime = time;
+		while(true)
+		{
+			if (waitingTime >= passengerTickTime) {
+				waitingTime -= passengerTickTime;
+
+				float passengersComing = ((float)passengersData.GetMaxPassengers () * Random.Range (minPercent, maxPercent)) / 100;
+				passengersCame += passengersComing;
+
+				passengersCameShown += (int)passengersCame;
+
+				Color color = passengersLabel.color;
+				color.a = 255;
+				passengersLabel.color = color;
+				passengersLabel.text = "passengers +" + passengersCameShown;
+
+				while (passengersCame >= 1) {
+					passengersData.AddPassenger ();
+					passengersCame -= 1;
+					if (passengersData.IsFull ()) {
+						break;
+					}
+				}
+				if (passengersData.IsFull ()) {
+					break;
+				}
+
+			} else
+				return;
 		}
 	}
 
@@ -131,20 +182,29 @@ public class TrainTimeScript : MonoBehaviour {
 
 	}
 
-	public void ComeInTown()
+	public void ComeInCommunity()
 	{
+		int minPercent = 0;
+		int maxPercent = 0;
+		if (GlobalUI.reference.IsState (GlobalUI.States.Town)) {
+			minPercent = TownController.reference.passengerInfo.MinPercentOut;
+			maxPercent = TownController.reference.passengerInfo.MaxPercentOut;
+		} else if (GlobalUI.reference.IsState (GlobalUI.States.Waystation)) {
+			minPercent = WaystationController.reference.passengerInfo.MinPercentOut;
+			maxPercent = WaystationController.reference.passengerInfo.MaxPercentOut;
+		}
 		PlayerSaveData.PassengerData passengersData = PlayerSaveData.reference.passengerData;
 		UpdatePassengersTravelTime ();
-		RemovePassengersComingOut (((float)passengersData.GetMaxPassengers() * Random.Range (passengerTownOutMinPercent, passengerTownOutMaxPercent)) / 100);
+		RemovePassengersComingOut (((float)passengersData.GetMaxPassengers() * Random.Range (minPercent, maxPercent)) / 100);
 	}
-
+	/*
 	public void ComeInWaystation()
 	{
 		PlayerSaveData.PassengerData passengersData = PlayerSaveData.reference.passengerData;
 		UpdatePassengersTravelTime ();
-		RemovePassengersComingOut (((float)passengersData.GetMaxPassengers() * Random.Range (passengerWaystationOutMinPercent, passengerWaystationOutMaxPercent)) / 100);
+		RemovePassengersComingOut (((float)passengersData.GetMaxPassengers() * Random.Range (minPercent, maxPercent)) / 100);
 	}
-
+	*/
 	public bool HaveEnoughTime(int minutes)
 	{
 		PlayerSaveData.TimeData time = PlayerSaveData.reference.time;
@@ -262,7 +322,7 @@ public class TrainTimeScript : MonoBehaviour {
 		GameTimerTick ();
 		if (IsTimeOut())
 		{
-			Application.LoadLevel(0);
+			GameController.reference.GameOver ();
 		}
 	}
 

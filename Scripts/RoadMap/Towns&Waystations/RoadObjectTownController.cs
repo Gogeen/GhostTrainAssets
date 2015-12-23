@@ -23,10 +23,8 @@ public class RoadObjectTownController : MonoBehaviour {
 			if (PlayerTrain.reference.speed == 0)
 			{
 				Debug.Log ("finished map");
-				TrainTimeScript.reference.ComeInTown();
+				TrainTimeScript.reference.ComeInCommunity();
                 Application.LoadLevel(1);
-				//spawner.SetTrainTo(spawner.spawnPoint);
-				//playerTrain.canControl = true;
 			}
 		}
 	}

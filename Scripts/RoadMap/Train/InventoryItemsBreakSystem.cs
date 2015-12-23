@@ -19,14 +19,15 @@ public class InventoryItemsBreakSystem : MonoBehaviour {
 				{
 					foreach(Transform slot in wagonUI.slots)
 					{
-						if (wagonUI.GetUIItemInSlot(slot) != null)
-							InventorySystem.reference.BreakItem(wagonUI.GetUIItemInSlot(slot).reference, Random.Range(itemDurabilityBreakMin, itemDurabilityBreakMax));
+						InventoryItemObject item = InventorySystem.reference.GetItemObjectInSlot (slot);
+						if (item != null)
+							item.Break(Random.Range(itemDurabilityBreakMin, itemDurabilityBreakMax));
 					}
 				}
-				foreach (InventoryItem equippedItem in PlayerSaveData.reference.trainData.equippedItems)
+				foreach (InventoryItemObject equippedItem in PlayerSaveData.reference.trainData.equippedItems)
 				{
 					if (equippedItem != null)
-						InventorySystem.reference.BreakItem(equippedItem, Random.Range(itemDurabilityBreakMin, itemDurabilityBreakMax));
+						equippedItem.Break(Random.Range(itemDurabilityBreakMin, itemDurabilityBreakMax));
 				}
 			}
 		}

@@ -41,7 +41,7 @@ public class SpeedWheelController : MonoBehaviour {
 			arrow.localEulerAngles = eulerAngles;
 			return;
 		}
-		float SpeedRange = Mathf.Abs (PlayerTrain.reference.minSpeed) + Mathf.Abs (PlayerTrain.reference.GetCurrentMaxSpeed());
+		float SpeedRange = Mathf.Abs (PlayerTrain.reference.minSpeed) + Mathf.Abs (PlayerTrain.reference.GetStartMaxSpeed());
 		float valueInRange = Mathf.Abs (PlayerTrain.reference.minSpeed) + PlayerTrain.reference.speed;
 		eulerAngles.z = -(2 * Mathf.Clamp(valueInRange/SpeedRange,0,1) - 1) * 90;
 		arrow.localEulerAngles = eulerAngles;
@@ -67,7 +67,7 @@ public class SpeedWheelController : MonoBehaviour {
 	void SetPlayerSpeed(Vector3 hitPoint)
 	{
 		
-		PlayerTrain.reference.SetWheelValue((GetVectorRotation(hitPoint - arrow.position) - 90) / -180);
+		PlayerTrain.reference.SetWheelValue( (GetVectorRotation (hitPoint - arrow.position) - 90) / (-180 * ( (100 - PlayerTrain.reference.speedDebuffPercent) / 100f ) ) );
 
 		PlayerTrain.reference.speedChangedManually = true;
 		

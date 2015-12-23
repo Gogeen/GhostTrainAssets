@@ -34,9 +34,11 @@ public class GameSettingsController : MonoBehaviour {
 
 	public void Update()
 	{
-		MasterVolume = MasterVolumeSlider.value;
+		MasterVolume = MasterVolumeSlider.value*100;
 		AudioListener.volume = MasterVolume / 100;
-		MusicVolume = MusicVolumeSlider.value;
+		Debug.Log ("AudioListener.volume: " + AudioListener.volume);
+
+		MusicVolume = MusicVolumeSlider.value*100;
 
 		if (lastCheckboxValue != fullScreenCheckbox.value) {
 			Screen.fullScreen = fullScreenCheckbox.value;

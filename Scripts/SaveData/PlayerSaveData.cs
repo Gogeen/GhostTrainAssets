@@ -14,6 +14,18 @@ public class PlayerSaveData : MonoBehaviour {
 	public PassengerData passengerData = new PassengerData();
 	public TrainData trainData = new TrainData ();
 	public List<WagonData> wagonData = new List<WagonData> ();
+
+	public BasicEngine basicEngine;
+
+	[Serializable]
+	public class BasicEngine
+	{
+		public bool OnUse;
+		public float speed;
+		public float power;
+		public float maxWeight;
+	}
+
 	[Serializable]
 	public class TrainData
 	{
@@ -24,7 +36,10 @@ public class PlayerSaveData : MonoBehaviour {
 		public int currentCrewCount;
 		public float maxCrewCount;
 		public float maxSpeed;
-		public InventoryItem[] equippedItems = new InventoryItem[3];
+		public float bonusEquipmentDurability;
+		public float bonusTradePricePercent;
+		public float bonusRepairPricePercent;
+		public InventoryItemObject[] equippedItems = new InventoryItemObject[3];
 
 		public float GetSpeedPenalty()
 		{
@@ -66,44 +81,73 @@ public class PlayerSaveData : MonoBehaviour {
 	{
 		public float attraction;
 		public float synergyAttraction;
+		public float synergyMagicPower;
 		public int currentPassengersCount;
 		public int maxPassengersCount;
 		public bool IsFull()
 		{
 			return currentPassengersCount >= maxPassengersCount;
 		}
-		public List<Item> items = new List<Item> ();
+		public List<InventoryItemObject> items = new List<InventoryItemObject> ();
 	}
 	
 
+	public void LoadTownInfo(string name)
+	{
+		WorldTowns.TownInfo info = WorldTowns.reference.FindByName (name);
+		if (info != null){
+			TownController.reference.name = info.name;
+			TownController.reference.passengerInfo = info.passengerInfo;
+			TownController.reference.shopInfo = info.shopInfo;
+			TownController.reference.quest = info.quest;
+			TrainTimeScript.reference.communityTimeInfo = info.passengerInfo;
+		}
+		InventorySystem.reference.LoadShopInfo (info.shopInfo);
+		StartCoroutine (InventorySystem.reference.InitShop());
+	}
 
+	public void LoadWaystationInfo(string name)
+	{
+		WorldWaystations.WaystationInfo info = WorldWaystations.reference.FindByName (name);
+		if (info != null){
+			WaystationController.reference.name = info.name;
+			WaystationController.reference.passengerInfo = info.passengerInfo;
+			WaystationController.reference.shopInfo = info.shopInfo;
+			//WaystationController.reference.quest = info.quest;
+			TrainTimeScript.reference.communityTimeInfo = info.passengerInfo;
+		}
+		InventorySystem.reference.LoadShopInfo (info.shopInfo);
+		StartCoroutine (InventorySystem.reference.InitShop());
+	}
 
 	public void InitGewGame()
 	{
 		InventorySystem.reference.Clear ();
-		time.minutes = 360;
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовый двигатель"), true);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовый парораспределительный механизм"), true);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовый смазочный механизм"), true);
+		LoadTownInfo ("town1");
+		time.minutes = 1200;
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовый двигатель"), InventorySystem.SlotType.Equipment);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовый парораспределительный механизм"), InventorySystem.SlotType.Equipment);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовый смазочный механизм"), InventorySystem.SlotType.Equipment);
 
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), false);
 
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), false,0);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), false,1);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("элитное купе"), false,2);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,0);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,1);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("элитное купе"), InventorySystem.SlotType.Wagon,2);
+		/*
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0, 30);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0, 25);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0, 32);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 6);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 7);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 12);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 13);
 
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), false,0, 30);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), false,0, 25);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), false,0, 32);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), false,1, 6);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), false,1, 7);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), false,1, 12);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), false,1, 13);
-
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("дерево"), false,2);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), false,2);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стул"), false,2);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стол"), false,2);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("дерево"), InventorySystem.SlotType.Wagon,2);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,2);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стул"), InventorySystem.SlotType.Wagon,2);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стол"), InventorySystem.SlotType.Wagon,2);
+		*/
 	}
 
 	void Awake()
@@ -167,11 +211,39 @@ public class PlayerSaveData : MonoBehaviour {
 			passengers.Add (newPassenger);
 
 		}
+		/// <summary>
+		/// Removes the passenger.
+		/// </summary>
+		/// <param name="passenger">Passenger.</param>
 		public void RemovePassenger(Passenger passenger)
 		{
 			PlayerSaveData.reference.wagonData [passenger.wagonIndex].currentPassengersCount -= 1;
 			passengers.Remove (passenger);
 		}
+		/// <summary>
+		/// Removes random passenger from specific wagon.
+		/// </summary>
+		/// <param name="wagonIndex">Wagon index.</param>
+		public void RemovePassenger(int wagonIndex)
+		{
+			int passengersCount = 0;
+			foreach (Passenger passenger in passengers) {
+				if (passenger.wagonIndex == wagonIndex)
+					passengersCount += 1;
+			}
+			int passengerIndexToRemove = UnityEngine.Random.Range (0, passengersCount);
+			int passengerIndex = 0;
+			foreach (Passenger passenger in passengers) {
+				if (passenger.wagonIndex == wagonIndex) {
+					if (passengerIndex == passengerIndexToRemove) {
+						RemovePassenger (passenger);
+						return;
+					}
+					passengerIndex += 1;
+				}
+			}
+		}
+
 		public Passenger GetPassenger(int index)
 		{
 			return passengers[index];
@@ -204,9 +276,9 @@ public class PlayerSaveData : MonoBehaviour {
 
 	}
 
-	public bool IsSaveExists()
+	public bool IsSaveExists(int index)
 	{
-		if (File.Exists (Application.persistentDataPath + "/Save.sav"))
+		if (File.Exists (Application.persistentDataPath + "/Save"+index.ToString()+".sav"))
 			return true;
 		return false;
 	}
@@ -214,8 +286,15 @@ public class PlayerSaveData : MonoBehaviour {
     public void Save()
     {
 		BinaryFormatter bf = new BinaryFormatter();
-		FileStream file = File.Create(Application.persistentDataPath + "/Save.sav");
-
+		if (IsSaveExists (3))
+			File.Delete (Application.persistentDataPath + "/Save3.sav");
+		if (IsSaveExists (2))
+			File.Move (Application.persistentDataPath + "/Save2.sav", Application.persistentDataPath + "/Save3.sav");
+		if (IsSaveExists (1))
+			File.Move (Application.persistentDataPath + "/Save1.sav", Application.persistentDataPath + "/Save2.sav");
+		
+		FileStream file = File.Create(Application.persistentDataPath + "/Save1.sav");
+		
 		SaveData saveData = new SaveData();
 
 		//save quests data
@@ -237,11 +316,11 @@ public class PlayerSaveData : MonoBehaviour {
 		for(int itemIndex = 0; itemIndex < saveData.equippedItems.Length; itemIndex++)
 		{
 			ItemData equippedItemData = new ItemData();
-			if (trainData.equippedItems[itemIndex] != null)
+			InventoryItemObject item = trainData.equippedItems [itemIndex];
+			if (item != null)
 			{
-				equippedItemData.index = trainData.equippedItems[itemIndex].databaseIndex;
-				//Debug.Log("saving item index is "+equippedItemData.index);
-				equippedItemData.currentDurabilityPercent = (trainData.equippedItems[itemIndex].durabilityInfo.current/trainData.equippedItems[itemIndex].durabilityInfo.max)*100;
+				equippedItemData.index = item.info.databaseIndex;
+				equippedItemData.currentDurabilityPercent = (item.info.durabilityInfo.current/item.info.durabilityInfo.max)*100;
 			}
 			saveData.equippedItems[itemIndex] = equippedItemData;
 		}
@@ -249,12 +328,11 @@ public class PlayerSaveData : MonoBehaviour {
 		//save wagon items data
 		for (int wagonIndex = 0; wagonIndex < wagonData.Count; wagonIndex++)
 		{
-			foreach (Item item in wagonData[wagonIndex].items)
+			foreach (InventoryItemObject item in wagonData[wagonIndex].items)
 			{
 				ItemData itemData = new ItemData();
-				Debug.Log ("item is "+item);
-				itemData.index = item.reference.databaseIndex;
-				itemData.currentDurabilityPercent = (item.reference.durabilityInfo.current/item.reference.durabilityInfo.max)*100;
+				itemData.index = item.info.databaseIndex;
+				itemData.currentDurabilityPercent = (item.info.durabilityInfo.current/item.info.durabilityInfo.max)*100;
 				itemData.wagonIndex = item.wagonIndex;
 				itemData.slotIndex = item.slotIndex;
 
@@ -267,17 +345,18 @@ public class PlayerSaveData : MonoBehaviour {
 		Debug.Log("Saved!" + " " + Application.persistentDataPath);
 	}
 
-	public void LoadData()
+	public void LoadData(int index)
 	{
-		StartCoroutine ("Load");
+		StrategyMapUIController.reference.LoadInfo ();
+		StartCoroutine ("Load", index);
 	}
 
-	public IEnumerator Load()
+	public IEnumerator Load(int index)
 	{
-		if (IsSaveExists())
+		if (IsSaveExists(index))
 		{
 			BinaryFormatter bf = new BinaryFormatter();
-			FileStream file = File.Open(Application.persistentDataPath + "/Save.sav", FileMode.Open);
+			FileStream file = File.Open(Application.persistentDataPath + "/Save"+index.ToString()+".sav", FileMode.Open);
 
 			SaveData saveData = (SaveData)bf.Deserialize(file);
 
@@ -307,8 +386,8 @@ public class PlayerSaveData : MonoBehaviour {
 				{
 					Debug.Log("loading item index is "+equippedItemData.index);
 
-					InventorySystem.reference.InitItem(ItemDatabase.reference.FindByIndex(equippedItemData.index), true);
-					trainData.equippedItems[itemIndex].durabilityInfo.current = trainData.equippedItems[itemIndex].durabilityInfo.max*equippedItemData.currentDurabilityPercent/100;
+					InventorySystem.reference.InitItem(ItemDatabase.reference.FindByIndex(equippedItemData.index), InventorySystem.SlotType.Equipment);
+					trainData.equippedItems[itemIndex].info.durabilityInfo.current = trainData.equippedItems[itemIndex].info.durabilityInfo.max*equippedItemData.currentDurabilityPercent/100;
 				}
 			}
 
@@ -320,13 +399,32 @@ public class PlayerSaveData : MonoBehaviour {
 
 			foreach (ItemData itemData in saveData.items)
 			{
-				InventorySystem.reference.InitItem(ItemDatabase.reference.FindByIndex(itemData.index), false, itemData.wagonIndex, itemData.slotIndex);
-				InventoryItem itemInfo = wagonData[itemData.wagonIndex].items[wagonData[itemData.wagonIndex].items.Count - 1].reference;
+				InventorySystem.reference.InitItem(ItemDatabase.reference.FindByIndex(itemData.index), InventorySystem.SlotType.Wagon, itemData.wagonIndex, itemData.slotIndex);
+				InventoryItem itemInfo = wagonData[itemData.wagonIndex].items[wagonData[itemData.wagonIndex].items.Count - 1].info;
 				itemInfo.durabilityInfo.current = itemInfo.durabilityInfo.max*itemData.currentDurabilityPercent/100;
 			}
 			file.Close();
 			Debug.Log("Loaded!");
 		}
 		yield return true;
+	}
+
+	void Update()
+	{
+		if (trainData.equippedItems [0] == null || trainData.equippedItems [0].IsBroken()) {
+			if (!basicEngine.OnUse) {
+				basicEngine.OnUse = true;
+				trainData.maxSpeed += basicEngine.speed;
+				trainData.maxWeight += basicEngine.maxWeight;
+				trainData.power += basicEngine.power;
+			}
+		} else {
+			if (basicEngine.OnUse) {
+				basicEngine.OnUse = false;
+				trainData.maxSpeed -= basicEngine.speed;
+				trainData.maxWeight -= basicEngine.maxWeight;
+				trainData.power -= basicEngine.power;
+			}
+		}
 	}
 }

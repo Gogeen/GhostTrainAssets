@@ -7,15 +7,15 @@ public class MainMenuController : MonoBehaviour {
 	
 	void Start()
 	{
-		if (PlayerSaveData.reference.IsSaveExists ())
+		if (PlayerSaveData.reference.IsSaveExists (1))
 			ContinueButton.SetActive (true);
 	}
 
 	public void LoadGame()
 	{
-		PlayerSaveData.reference.LoadData ();
+		//PlayerSaveData.reference.LoadData (1);
 		//Application.LoadLevel(1);
-		GlobalUI.reference.SetState(GlobalUI.States.Town);
+		GlobalUI.reference.SetState(GlobalUI.States.LoadGame);
 	}
 
     public void NewGame()

@@ -10,6 +10,9 @@ public class UIThroughEntireGame : MonoBehaviour {
 	public InventorySystem inventorySystem;
 	public PauseMenuController pauseMenu;
 	public GameSettingsController gameSettings;
+	public TownController townController;
+	public WaystationController waystationController;
+	public StrategyMapUIController strategyMapController;
 	void Awake()
 	{
 		if (reference == null) 
@@ -27,6 +30,9 @@ public class UIThroughEntireGame : MonoBehaviour {
 			GameSettingsController.reference = gameSettings;
 			GameSettingsController.reference.Load();
 			GameSettingsController.reference.Update();
+			TownController.reference = townController;
+			WaystationController.reference = waystationController;
+			StrategyMapUIController.reference = strategyMapController;
 		}
 		else
 		{

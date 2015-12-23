@@ -148,5 +148,6 @@ public class PlayerTrain : TrainController {
 		{
 			ToggleGhostMode(!ghostMode);
 		}
+		InventorySystem.reference.CheckSigns ();
 	}
 }

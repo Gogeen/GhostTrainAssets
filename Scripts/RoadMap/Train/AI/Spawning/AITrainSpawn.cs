@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class AITrainSpawn : MonoBehaviour {
 
+	public bool isSpawning = false;
 	public GameObject enemyPrefab;
 	public float startSpawnDelay;
 	public float spawnTime;
@@ -47,17 +48,20 @@ public class AITrainSpawn : MonoBehaviour {
 	void Spawn()
 	{
 		GameObject enemy = Instantiate (enemyPrefab) as GameObject;
+		enemy.transform.parent = transform;
 		SetTrainTo (enemy.transform, spawnPoint);
 	}
 
 	IEnumerator Spawner()
 	{
 		yield return new WaitForSeconds (startSpawnDelay);
-		Spawn ();
-		while (true) 
-		{
-			yield return new WaitForSeconds (spawnTime);
+		while (true) {
+			if (!isSpawning){
+				yield return new WaitForSeconds(1);
+				continue;
+			}
 			Spawn ();
+			yield return new WaitForSeconds (spawnTime);
 		}
 	}
 

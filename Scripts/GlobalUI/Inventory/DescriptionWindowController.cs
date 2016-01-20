@@ -6,6 +6,7 @@ public class DescriptionWindowController : MonoBehaviour {
 	public bool IsCompare = false;
 	public UIGrid grid;
 
+	public UIStat Name;
 	public UIStat Price;
 	public UIStat Weight;
 	public UIStat PassengerSpace;
@@ -53,7 +54,13 @@ public class DescriptionWindowController : MonoBehaviour {
 
 		int siblingIndex = 0;
 
-		Price.gameObject.SetActive (IsShowStatInfo (InventorySystem.reference.GetItemTotalPrice (itemObject)));
+		Name.value.text = info.name;
+		if (Name.gameObject.activeSelf) {
+			Name.transform.SetSiblingIndex (siblingIndex);
+			siblingIndex += 1;
+		}
+
+		//Price.gameObject.SetActive (IsShowStatInfo (InventorySystem.reference.GetItemTotalPrice (itemObject)));
 		Price.value.text = InventorySystem.reference.GetItemTotalPrice (itemObject).ToString ();
 		if (Price.gameObject.activeSelf) {
 			Price.transform.SetSiblingIndex (siblingIndex);
@@ -173,7 +180,7 @@ public class DescriptionWindowController : MonoBehaviour {
 		transform.position = UICamera.lastHit.point;
 			
 
-		transform.localPosition += new Vector3 (10, -20, 0);
+		transform.localPosition += new Vector3 (10, 10, 0);
 		transform.localPosition += new Vector3 (0,transform.FindChild("Background").GetComponent<UISprite>().localSize.y,0);
 
 		if (IsCompare) {
@@ -196,7 +203,7 @@ public class DescriptionWindowController : MonoBehaviour {
 			transform.localPosition += new Vector3 (-transform.FindChild ("Background").GetComponent<UISprite> ().localSize.x, 0, 0);
 		}
 		if (transform.localPosition.y + 10 > root.manualHeight / 2) {
-			transform.localPosition += new Vector3 (0, -transform.FindChild ("Background").GetComponent<UISprite> ().localSize.y, 0);
+			transform.localPosition += new Vector3 (0, -transform.FindChild ("Background").GetComponent<UISprite> ().localSize.y - 60, 0);
 		}
 	}
 

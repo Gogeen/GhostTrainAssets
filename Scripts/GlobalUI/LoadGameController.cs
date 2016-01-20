@@ -30,7 +30,7 @@ public class LoadGameController : MonoBehaviour {
 		button.transform.parent = ButtonsGrid;
 		button.transform.localScale = new Vector3 (1,1,1);
 		button.transform.SetSiblingIndex (index);
-		button.transform.GetChild (0).GetComponent<UILabel> ().text = "Save "+index;
+		button.transform.GetChild (0).GetComponent<UILabel> ().text = "Сохранение "+index;
 
 		EventDelegate action;
 

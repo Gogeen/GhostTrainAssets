@@ -4,7 +4,8 @@ using System.Collections;
 public class DialogueController : MonoBehaviour {
 
 	public static DialogueController reference = null;
-	TextQuest quest;
+	QuestsController.Quest quest = null;
+	QuestsController.QuestNode currentNode = null;
 	public GameObject answerButtonPrefab;
 
 	public UILabel AITextLabel;
@@ -19,6 +20,7 @@ public class DialogueController : MonoBehaviour {
 	public void Activate()
 	{
 		quest = DialogueSystem.reference.quest;
+		currentNode = quest.nodes [0];
 		GlobalUI.reference.SetState (GlobalUI.States.Dialogue);
 
 		EventDelegate action;
@@ -29,7 +31,7 @@ public class DialogueController : MonoBehaviour {
 		action = new EventDelegate(this, "FlipLogForward");
 		EventDelegate.Add(logForwardButton.GetComponent<UIButton>().onClick, action);
 
-		UpdateUI(DialogueSystem.reference.currentNodeIndex);
+		UpdateUI(currentNode);
 
 	}
 	
@@ -49,107 +51,138 @@ public class DialogueController : MonoBehaviour {
 	public void FlipLogBack()
 	{
 		DialogueSystem.reference.currentLogIndex -= 2;
-		UpdateUI(DialogueSystem.reference.currentNodeIndex);
+		//UpdateUI(DialogueSystem.reference.currentNodeIndex);
 	}
 	
 	public void FlipLogForward()
 	{
 		DialogueSystem.reference.currentLogIndex += 2;
-		UpdateUI(DialogueSystem.reference.currentNodeIndex);
+		//UpdateUI(DialogueSystem.reference.currentNodeIndex);
 	}
 
-	public void DrawAnswerButtons(int nodeIndex)
+	GameObject GenerateAnswerButton(string text, string imageName, int index)
 	{
-		int answersCount = quest.FindAINode(nodeIndex).GetAnswersCount();
+		GameObject button = Instantiate(answerButtonPrefab) as GameObject;
+		button.transform.GetChild(0).GetComponent<UILabel>().text = text;
+		button.transform.GetChild(1).GetComponent<UISprite>().spriteName = imageName;
+		button.transform.parent = answerButtonsGrid.transform;
+		button.transform.SetSiblingIndex(index);
+		button.transform.localScale = new Vector3(1, 1, 1);
+
+		return button;
+	}
+
+	public void DrawAnswerButtons(QuestsController.QuestNode node)
+	{
+		int answersCount = node.answers.Count;
 		int indexInHierarchy = 0;
 		for (int childIndex = 0; childIndex < answersCount; childIndex++)
 		{
-			if (!quest.showUnavailableAnswers)
-			{
-				if (quest.FindAINode(nodeIndex).GetAnswer(childIndex).checkInfluence)
-				{
-					if (quest.FindAINode(nodeIndex).GetAnswer(childIndex).GetInfluenceRequired() > DialogueSystem.reference.currentInfluence)
-					{
-						continue;
-					}
-					else if (quest.FindAINode(nodeIndex).GetAnswer(childIndex).GetInfluenceRequiredMax() < DialogueSystem.reference.currentInfluence)
-					{
-						continue;
-					}
+			QuestsController.Answer answer = node.answers [childIndex];
+			if (!quest.settings.showUnavailableAnswers){
+				if (!QuestsController.IsPassRequirements(answer)){
+					continue;
 				}
 			}
-			GameObject button = Instantiate(answerButtonPrefab) as GameObject;
-			button.transform.GetChild(0).GetComponent<UILabel>().text = quest.FindAINode(nodeIndex).GetAnswer(childIndex).GetText();
-			button.transform.GetChild(1).GetComponent<UISprite>().spriteName = quest.FindAINode(nodeIndex).GetAnswer(childIndex).GetSprite();
-			button.transform.parent = answerButtonsGrid.transform;
-			button.transform.SetSiblingIndex(indexInHierarchy);
+			GameObject button = GenerateAnswerButton(answer.text, answer.imageName,indexInHierarchy);
 			indexInHierarchy += 1;
-			button.transform.localScale = new Vector3(1, 1, 1);
 			EventDelegate action = new EventDelegate(this, "SelectAnswer");
-			action.parameters[0].value = childIndex;
+			action.parameters[0].value = answer;
 			EventDelegate.Add(button.GetComponent<UIButton>().onClick, action);
-			if (quest.FindAINode(nodeIndex).GetAnswer(childIndex).checkInfluence)
-			{
-				if (quest.FindAINode(nodeIndex).GetAnswer(childIndex).GetInfluenceRequired() > DialogueSystem.reference.currentInfluence)
+			if (quest.settings.showUnavailableAnswers){
+				if (!QuestsController.IsPassRequirements(answer)){
 					Destroy(button.GetComponent<BoxCollider>());
-				else if (quest.FindAINode(nodeIndex).GetAnswer(childIndex).GetInfluenceRequiredMax() < DialogueSystem.reference.currentInfluence)
-					Destroy(button.GetComponent<BoxCollider>());
+				}
 			}
-			
 		}
 		answerButtonsGrid.GetComponent<UIGrid>().Reposition();
 	}
 
-	public void SelectAnswer(int index)
+	public void SelectAnswer(QuestsController.Answer answer)
 	{
-		DialogueSystem.reference.currentInfluence += quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetAnswer(index).GetInfluenceGained();
-		DialogueSystem.reference.log.Add(DialogueSystem.reference.currentNodeIndex);
-		DialogueSystem.reference.log.Add(index);
-		DialogueSystem.reference.currentLogIndex = DialogueSystem.reference.log.Count;
-		
-		if (quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetAnswer(index).GetNextNodeIndex() == quest.finishNodeIndex)
+		QuestsController.ApplyResults (answer);
+
+		QuestsController.QuestNode nextNode = QuestsController.FindNode (quest, answer.pointer);
+		if (nextNode == null)
 		{
 			DialogueSystem.reference.FinishQuest();
 			return;
 		}
-		DialogueSystem.reference.currentNodeIndex = quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetAnswer(index).GetNextNodeIndex();
-		
-		UpdateUI(DialogueSystem.reference.currentNodeIndex);
+		currentNode = nextNode;
+		UpdateUI(currentNode);
 	}
 
-	public void UpdateUI(int nodeIndex)
+	public void UpdateUI(QuestsController.QuestNode node)
 	{
 		
-		if (DialogueSystem.reference.currentLogIndex > 0)
+		/*if (DialogueSystem.reference.currentLogIndex > 0)
 			logBackButton.SetActive(true);
 		else
 			logBackButton.SetActive(false);
-		
+		*/
+
 		for (int childIndex = answerButtonsGrid.transform.childCount - 1; childIndex >= 0; childIndex--)
 		{
 			Destroy(answerButtonsGrid.transform.GetChild(childIndex).gameObject);
 		}
-		
+
+		/*
+		если текст слишком длинный, его надо разбить на несколько кусков
+		берем первый кусок, оставшееся сохраняем
+		показываем его, с единственным вариантом ответа - Далее
+		повторяем эти действия, пока не останется текста для показа.
+		когда его не останется, показываем варианты ответа как обычно.
+		*/
 		
 		if (DialogueSystem.reference.currentLogIndex >= DialogueSystem.reference.log.Count)
 		{
 			logForwardButton.SetActive(false);
 			logAnswerLabel.gameObject.SetActive(false);
-			
-			AITextLabel.text = quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetText();
-			if (quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetResultIndex() != quest.zeroResultIndex)
-				AITextLabel.text += "\n\n" + quest.FindResultNode(quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetResultIndex()).GetText();
-			AISprite.spriteName = quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetSprite();
-			
-			DrawAnswerButtons(nodeIndex);
+
+			string textToShow = "";
+			foreach (QuestsController.TextPart part in node.textParts) {
+				if (QuestsController.IsPassRequirements (part)) {
+					textToShow += part.text;
+				}
+					
+			}
+			//AITextLabel.text = quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetText();
+			//if (quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetResultIndex() != quest.zeroResultIndex)
+			//	AITextLabel.text += "\n\n" + quest.FindResultNode(quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetResultIndex()).GetText();
+			AISprite.spriteName = node.imageName;
+			AITextLabel.text = textToShow;
+			/*
+			string textPartToShow = "";
+			while (textToShow != "") {
+				for (int charIndex = 0; charIndex < textToShow.Length; charIndex++) {
+					if (textToShow[charIndex] == '@') {
+						// draw text and repeat
+						textPartToShow = "";
+						textToShow.CopyTo(0,textPartToShow,0,charIndex+1);
+						textToShow.Remove (0, charIndex+1);
+						break;
+					}
+					//textPartToShow += textToShow[charIndex];
+				}
+			}
+			GameObject button = GenerateAnswerButton(answer.text, answer.imageName,indexInHierarchy);
+			indexInHierarchy += 1;
+			EventDelegate action = new EventDelegate(this, "SelectAnswer");
+			action.parameters[0].value = answer;
+			EventDelegate.Add(button.GetComponent<UIButton>().onClick, action);
+			*/
+
+			DrawAnswerButtons(node);
 		}
 		else
 		{
+			/*
 			logForwardButton.SetActive(true);
 			AITextLabel.text = quest.FindAINode(DialogueSystem.reference.log[DialogueSystem.reference.currentLogIndex]).GetText();
 			AISprite.spriteName = quest.FindAINode(DialogueSystem.reference.log[DialogueSystem.reference.currentLogIndex]).GetSprite();
 			logAnswerLabel.gameObject.SetActive(true);
 			logAnswerLabel.text = quest.FindAINode(DialogueSystem.reference.log[DialogueSystem.reference.currentLogIndex]).GetAnswer(DialogueSystem.reference.log[DialogueSystem.reference.currentLogIndex + 1]).GetText();
+			*/
 		}
 	}
 }

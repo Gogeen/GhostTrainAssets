@@ -29,6 +29,8 @@ public class InventoryItemObject : MonoBehaviour {
 
 	public void Break(float value)
 	{
+		if (PlayerSaveData.reference.trainData.conditions.Invulnerable)
+			return;
 		RemoveStats ();
 		info.durabilityInfo.current -= value;
 		if (info.durabilityInfo.current < 0) {
@@ -58,6 +60,16 @@ public class InventoryItemObject : MonoBehaviour {
 		return (int)(info.costInfo.timePrice * (1 - info.durabilityInfo.current / info.durabilityInfo.max) * (1f - PlayerSaveData.reference.trainData.bonusRepairPricePercent/100f));
 	}
 
+	public int GetRepairCost(float value)
+	{
+		float repairPoints = 0;
+		if (info.durabilityInfo.current + value > info.durabilityInfo.max)
+			repairPoints = info.durabilityInfo.max - info.durabilityInfo.current;
+		else
+			repairPoints = value;
+		return (int)(info.costInfo.timePrice * (repairPoints / info.durabilityInfo.max) * (1f - PlayerSaveData.reference.trainData.bonusRepairPricePercent/100f));
+	}
+
 	public void Repair()
 	{
 		RemoveStats ();
@@ -71,6 +83,24 @@ public class InventoryItemObject : MonoBehaviour {
 		ApplyStats();
 	}
 
+	public void Repair(float value, bool isFree = false)
+	{
+		RemoveStats ();
+		// cost is equals item total price if item is totally broken
+		int cost = 0;
+		if (!isFree)
+			cost = GetRepairCost(value);
+		
+		if (TrainTimeScript.reference.HaveEnoughTime(cost))
+		{
+			info.durabilityInfo.current += value;
+			if (info.durabilityInfo.current > info.durabilityInfo.max)
+				info.durabilityInfo.current = info.durabilityInfo.max;
+			TrainTimeScript.reference.AddTime (-cost);
+		}
+		ApplyStats();
+	}
+
 	public void Take()
 	{
 		lastSlot = GetSlot ();
@@ -78,10 +108,10 @@ public class InventoryItemObject : MonoBehaviour {
 
 	public void Place(Transform slot)
 	{
-		Debug.Log ("place item function is on work");
+		//Debug.Log ("place item function is on work");
 		// check that slot is correctly set up
 		if (slot.GetComponent<UIDragDropContainer> () == null) {
-			Debug.Log ("slot is broken!");
+			//Debug.Log ("slot is broken!");
 			return;
 		}
 
@@ -90,6 +120,20 @@ public class InventoryItemObject : MonoBehaviour {
 			if (!InventorySystem.reference.CanPutInSlot (slot, this)) {
 				Place (GetLastSlot ());
 				return;
+			}
+		}
+
+
+		if (!PlayerSaveData.reference.trainData.conditions.CanManageInventory) {
+			if (InventorySystem.reference.GetSlotInfo(GetLastSlot ()) != null) {
+				if (InventorySystem.reference.GetSlotInfo (GetLastSlot ()).type != InventorySystem.reference.GetSlotInfo (slot).type) {
+					Place (GetLastSlot ());
+					return;
+				}
+				if (wagonIndex != InventorySystem.reference.GetSlotInfo (slot).wagonIndex) {
+					Place (GetLastSlot ());
+					return;
+				}
 			}
 		}
 
@@ -149,7 +193,7 @@ public class InventoryItemObject : MonoBehaviour {
 
 
 		lastSlot = slot;
-		Debug.Log ("place item function finished, new slot is  " + slot);
+		//Debug.Log ("place item function finished, new slot is  " + slot);
 		// after all changes with item info check its durability
 		if (info.durabilityInfo.current > info.durabilityInfo.max) {
 			info.durabilityInfo.current = info.durabilityInfo.max;
@@ -255,7 +299,7 @@ public class InventoryItemObject : MonoBehaviour {
 							continue;
 						equippedItem.info.durabilityInfo.max /= (100 + info.bonusInfo.equipmentDurability)/100;
 						equippedItem.info.durabilityInfo.current /= (100 + info.bonusInfo.equipmentDurability)/100;
-						Debug.Log (GetSlot ());
+						//Debug.Log (GetSlot ());
 						if (InventorySystem.reference.GetSlotInfo (GetSlot ()).type != InventorySystem.SlotType.Equipment) {
 							if (equippedItem.info.durabilityInfo.current > equippedItem.info.durabilityInfo.max) {
 								equippedItem.info.durabilityInfo.current = equippedItem.info.durabilityInfo.max;
@@ -395,12 +439,16 @@ public class InventoryItemObject : MonoBehaviour {
 	{
 		Debug.Log ("tryimg to buy item");
 		TrainTimeScript.reference.AddTime (-GetBuyPrice());
+		//StartCoroutine(InventorySystem.reference.SortShop ());
+		//InventorySystem.reference.SortShop ();
 	}
 
 	public void Sell()
 	{
 		Debug.Log ("tryimg to sell item");
 		TrainTimeScript.reference.AddTime (GetSellPrice());
+		//StartCoroutine(InventorySystem.reference.SortShop ());
+		//InventorySystem.reference.SortShop ();
 	}
 
 	void Update()
@@ -413,7 +461,7 @@ public class InventoryItemObject : MonoBehaviour {
 
 	void OnDestroy()
 	{
-		//RemoveStats ();
+		
 		if (InventorySystem.reference.GetSlotInfo (GetSlot ()).type == InventorySystem.SlotType.Wagon) {
 			if (PlayerSaveData.reference.wagonData [wagonIndex].items.Contains (this)) {
 				TakeFromWagon (wagonIndex);

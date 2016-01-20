@@ -14,6 +14,7 @@ public class PlayerSaveData : MonoBehaviour {
 	public PassengerData passengerData = new PassengerData();
 	public TrainData trainData = new TrainData ();
 	public List<WagonData> wagonData = new List<WagonData> ();
+	public string townName;
 
 	public BasicEngine basicEngine;
 
@@ -27,8 +28,19 @@ public class PlayerSaveData : MonoBehaviour {
 	}
 
 	[Serializable]
+	public class Conditions
+	{
+		public bool Invulnerable = false;
+		public bool Shield = false;
+		public bool LostControl = false;
+		public bool CanManageInventory = true;
+		public bool HasScales = false;
+	}
+
+	[Serializable]
 	public class TrainData
 	{
+		public Conditions conditions;
 		public float power;
 		public float magicPower;
 		public float currentWeight;
@@ -99,11 +111,12 @@ public class PlayerSaveData : MonoBehaviour {
 			TownController.reference.name = info.name;
 			TownController.reference.passengerInfo = info.passengerInfo;
 			TownController.reference.shopInfo = info.shopInfo;
-			TownController.reference.quest = info.quest;
+			TownController.reference.questName = info.questName;
 			TrainTimeScript.reference.communityTimeInfo = info.passengerInfo;
 		}
 		InventorySystem.reference.LoadShopInfo (info.shopInfo);
 		StartCoroutine (InventorySystem.reference.InitShop());
+		townName = name;
 	}
 
 	public void LoadWaystationInfo(string name)
@@ -122,6 +135,8 @@ public class PlayerSaveData : MonoBehaviour {
 
 	public void InitGewGame()
 	{
+		quests.Clear ();
+
 		InventorySystem.reference.Clear ();
 		LoadTownInfo ("town1");
 		time.minutes = 1200;
@@ -129,12 +144,46 @@ public class PlayerSaveData : MonoBehaviour {
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовый парораспределительный механизм"), InventorySystem.SlotType.Equipment);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовый смазочный механизм"), InventorySystem.SlotType.Equipment);
 
+		// first wagon
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,0,0);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,0,12);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,0,24);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,0,4);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,0,16);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,0,28);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("дерево"), InventorySystem.SlotType.Wagon,0,30);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("дерево"), InventorySystem.SlotType.Wagon,0,36);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("дерево"), InventorySystem.SlotType.Wagon,0,42);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("дерево"), InventorySystem.SlotType.Wagon,0,31);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("дерево"), InventorySystem.SlotType.Wagon,0,37);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("дерево"), InventorySystem.SlotType.Wagon,0,43);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,0,34);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,0,40);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,0,46);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,0,35);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,0,41);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,0,47);
 
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,0);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,1);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("элитное купе"), InventorySystem.SlotType.Wagon,2);
+		// second wagon
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,1,0);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,1,12);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,1,24);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,1,4);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,1,16);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,1,28);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("элитное купе"), InventorySystem.SlotType.Wagon,1,42);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("элитное купе"), InventorySystem.SlotType.Wagon,1,46);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стул"), InventorySystem.SlotType.Wagon,1,36);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стул"), InventorySystem.SlotType.Wagon,1,40);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стол"), InventorySystem.SlotType.Wagon,1,37);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стол"), InventorySystem.SlotType.Wagon,1,41);
+
+		// third wagon
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon,2,0);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon,2,4);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon,2,36);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon,2,40);
 		/*
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0, 30);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0, 25);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0, 32);
@@ -142,12 +191,8 @@ public class PlayerSaveData : MonoBehaviour {
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 7);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 12);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 13);
-
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("дерево"), InventorySystem.SlotType.Wagon,2);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,2);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стул"), InventorySystem.SlotType.Wagon,2);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стол"), InventorySystem.SlotType.Wagon,2);
 		*/
+
 	}
 
 	void Awake()
@@ -273,7 +318,22 @@ public class PlayerSaveData : MonoBehaviour {
 		public PassengerData passengerData = new PassengerData();
 		public ItemData[] equippedItems = new ItemData[3];
 		public List<ItemData> items = new List<ItemData>();
+		public string townName;
+		public WorldData worldData = new WorldData();
+	}
 
+	[Serializable]
+	class WorldData
+	{
+		public MailData mailData = new MailData();
+	}
+
+	[Serializable]
+	class MailData
+	{
+		public int remainingTime = 0;
+		public bool canComplete = false;
+		public bool inProgress = false;
 	}
 
 	public bool IsSaveExists(int index)
@@ -340,6 +400,12 @@ public class PlayerSaveData : MonoBehaviour {
 			}
 		}
 
+		saveData.townName = townName;
+
+		saveData.worldData.mailData.remainingTime = MailQuestsController.reference.timeForQuest;
+		saveData.worldData.mailData.canComplete = MailQuestsController.reference.canComplete;
+		saveData.worldData.mailData.inProgress = MailQuestsController.reference.inProgress;
+
 		bf.Serialize(file, saveData);
 		file.Close();
 		Debug.Log("Saved!" + " " + Application.persistentDataPath);
@@ -403,6 +469,15 @@ public class PlayerSaveData : MonoBehaviour {
 				InventoryItem itemInfo = wagonData[itemData.wagonIndex].items[wagonData[itemData.wagonIndex].items.Count - 1].info;
 				itemInfo.durabilityInfo.current = itemInfo.durabilityInfo.max*itemData.currentDurabilityPercent/100;
 			}
+
+			townName = saveData.townName;
+			LoadTownInfo (townName);
+
+			MailQuestsController.reference.timeForQuest = saveData.worldData.mailData.remainingTime;
+			MailQuestsController.reference.canComplete = saveData.worldData.mailData.canComplete;
+			MailQuestsController.reference.inProgress = saveData.worldData.mailData.inProgress;
+
+
 			file.Close();
 			Debug.Log("Loaded!");
 		}

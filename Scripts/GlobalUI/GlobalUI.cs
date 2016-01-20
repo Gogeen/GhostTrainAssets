@@ -21,6 +21,8 @@ public class GlobalUI : MonoBehaviour {
 	public GameObject Timer;
 	public GameObject PauseMenuButton;
 
+	public GameObject Console;
+
 	public enum States
 	{
 		MainMenu,
@@ -35,6 +37,7 @@ public class GlobalUI : MonoBehaviour {
 		LoadingScreen,
 		Waystation,
 		LoadGame,
+		Console,
 		Null
 	}
 	public States currentState;
@@ -114,6 +117,7 @@ public class GlobalUI : MonoBehaviour {
 		case States.LoadingScreen: 	{LoadingScreen.SetActive(isActivate);	break;}
 		case States.Waystation: 	{Waystation.SetActive(isActivate);		break;}
 		case States.LoadGame: 		{LoadGame.SetActive(isActivate);		break;}
+		case States.Console: 		{Console.SetActive(isActivate);			break;}
 		}
 		if (!isActivate)
 			return;
@@ -133,6 +137,7 @@ public class GlobalUI : MonoBehaviour {
 		case States.LoadingScreen: 	{PauseMenuButton.SetActive(false);	break;}
 		case States.Waystation: 	{PauseMenuButton.SetActive(true);	break;}
 		case States.LoadGame: 		{PauseMenuButton.SetActive(false);	break;}
+		case States.Console: 		{PauseMenuButton.SetActive(false);	break;}
 		}
 
 		// change timer visibility depending on state
@@ -150,6 +155,7 @@ public class GlobalUI : MonoBehaviour {
 		case States.LoadingScreen: 	{Timer.SetActive(false);	break;}
 		case States.Waystation: 	{Timer.SetActive(true);		break;}
 		case States.LoadGame: 		{Timer.SetActive(false);	break;}
+		case States.Console: 		{Timer.SetActive(true);		break;}
 		}
 
 		// change time speed depending on state
@@ -158,7 +164,6 @@ public class GlobalUI : MonoBehaviour {
 		else
 			GameController.reference.Pause ();
 
-		// change time speed depending on state
 		if (state == States.Shop)
 			InventorySystem.reference.OpenShop ();
 		else
@@ -170,6 +175,11 @@ public class GlobalUI : MonoBehaviour {
 
 		if (state == States.Town)
 			GameController.reference.UnloadMap ();
+
+		if (state == States.Town || state == States.Waystation)
+			PlayerSaveData.reference.trainData.conditions.CanManageInventory = true;
+		else if (state == States.Road)
+			PlayerSaveData.reference.trainData.conditions.CanManageInventory = false;
 		
 		// if activating window, need to do something with previous window
 
@@ -264,6 +274,24 @@ public class GlobalUI : MonoBehaviour {
 		else
 		{
 			Destroy(gameObject);
+		}
+	}
+
+	void Update()
+	{
+		if (IsState(States.StrategyMap) || IsState(States.Town)) {
+			if (StrategyMapUIController.reference.destinationTown != null && PlayerSaveData.reference.trainData.equippedItems [0] != null)
+				TownController.reference.ActivateTravelButton ();
+			else
+				TownController.reference.DeactivateTravelButton ();
+		}else
+			TownController.reference.DeactivateTravelButton ();
+
+		if (Input.GetKeyDown ("`")) {
+			if (!IsState (States.Console))
+				SetState (States.Console);
+			else
+				GoBack ();
 		}
 	}
 }

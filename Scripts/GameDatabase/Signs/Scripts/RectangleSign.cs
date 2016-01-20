@@ -7,6 +7,10 @@ public class RectangleSign : Sign {
 	{
 		if (roadFeature != null)
 			roadFeature.stopFeature = true;
+		foreach (GameObject pile in playerTrain.GetPilesNear()) {
+			pile.GetComponent<RoadPile>().hitPoints -= 1;
+		}
+		playerTrain.ClearPilesNear ();
 		yield return null;
 	}
 }

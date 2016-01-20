@@ -30,6 +30,7 @@ public class TrainController : MonoBehaviour {
 			speed = minSpeed;
 		else
 			speed = 0;
+
 	}
 
 	public void AccelerateTo(float value)
@@ -88,6 +89,6 @@ public class TrainController : MonoBehaviour {
 
 	void Update()
 	{
-
+		
 	}
 }

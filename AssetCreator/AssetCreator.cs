@@ -11,7 +11,7 @@ public class AssetCreator : MonoBehaviour {
 		if (assetDataName != "") {
 			ScriptableObject asset = ScriptableObject.CreateInstance (assetDataName);
 			Debug.Log (assetDataName);
-			//UnityEditor.AssetDatabase.CreateAsset (asset, "Assets/AssetCreator/newAsset.asset");
+//			UnityEditor.AssetDatabase.CreateAsset (asset, "Assets/AssetCreator/newAsset.asset");
 		}
 	}
 

@@ -13,7 +13,7 @@ public class WorldTowns : ScriptableObject {
 		public string name;
 		public PassengerInfo passengerInfo;
 		public VendorShop shopInfo;
-		public TextQuest quest;
+		public string questName;
 	}
 
 	public TownInfo FindByName(string name)

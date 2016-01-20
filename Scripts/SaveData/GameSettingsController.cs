@@ -14,6 +14,8 @@ public class GameSettingsController : MonoBehaviour {
 	bool lastCheckboxValue;
 	public UIToggle fullScreenCheckbox;
 
+	public string languageByDefault;
+
 	public void Load()
 	{
 		MasterVolume = PlayerPrefs.GetFloat ("MasterVolume");
@@ -24,6 +26,8 @@ public class GameSettingsController : MonoBehaviour {
 
 		fullScreenCheckbox.value = Screen.fullScreen;
 		lastCheckboxValue = fullScreenCheckbox.value;
+
+		Localization.language = languageByDefault;
 	}
 
 	public void Save()

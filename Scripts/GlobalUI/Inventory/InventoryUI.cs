@@ -65,7 +65,6 @@ public class InventoryUI : MonoBehaviour {
 
 	public void PrintStats()
 	{
-		SpeedStat.description.text = "Speed:";
 		float currentSpeed = PlayerSaveData.reference.trainData.GetCurrentSpeed ();
 		if (PlayerTrain.reference != null) {
 			currentSpeed *= (100 - PlayerTrain.reference.speedDebuffPercent) / 100f;
@@ -86,22 +85,19 @@ public class InventoryUI : MonoBehaviour {
 			SpeedStat.penalty.text = "";
 		}
 
-		PowerStat.description.text = "Power:";
 		PowerStat.value.text = PlayerSaveData.reference.trainData.power.ToString();
 		PowerStat.penalty.text = "";
 
-		WeightStat.description.text = "Weight:";
 		WeightStat.value.text = PlayerSaveData.reference.trainData.currentWeight.ToString()+"/"+PlayerSaveData.reference.trainData.maxWeight.ToString();
 		WeightStat.penalty.text = "";
 
-		MagicPowerStat.description.text = "Magic Power:";
 		MagicPowerStat.value.text = PlayerSaveData.reference.trainData.magicPower.ToString();
 		MagicPowerStat.penalty.text = "";
 
 		int wagonIndex = 0;
 		foreach(WagonUIStat wagonStat in WagonsStat)
 		{
-			wagonStat.description.text = "Wagon " + (wagonIndex + 1);
+			//wagonStat.description.text = "Wagon " + (wagonIndex + 1);
 
 			wagonStat.Attraction.value.text = PlayerSaveData.reference.wagonData[wagonIndex].attraction.ToString();
 			wagonStat.Passengers.value.text = PlayerSaveData.reference.wagonData[wagonIndex].currentPassengersCount.ToString() + "/" + PlayerSaveData.reference.wagonData[wagonIndex].maxPassengersCount.ToString();

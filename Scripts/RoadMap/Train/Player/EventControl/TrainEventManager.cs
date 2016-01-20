@@ -6,87 +6,83 @@ public class TrainEventManager : MonoBehaviour {
 	
 	public Camera trainCamera;
 	public float ghostModeClickTime;
-	float clickTimer;
-	void Start()
+	public float ghostModeCooldown;
+	public float ghostModeDuration;
+	public int ghostModeCost;
+
+	float ghostModeCooldownTimer = 0;
+	public string ghostModeKey;
+	public string stopKey;
+	float clickTimer = 0;
+
+	bool CanUseGhostMode()
 	{
-		//AssetDatabase.CreateAsset (new Sign(), "Assets/Sign.asset");
-		clickTimer = 0;
+		return ghostModeCooldownTimer <= 0;
 	}
 
-	bool ghostModeToggled = false;
-	void ToggleGhostMode()
+	void UseGhostMode()
 	{
-		ghostModeToggled = true;
-		GetComponent<PlayerTrain>().ToggleGhostMode(!GetComponent<PlayerTrain>().ghostMode);
+		PlayerTrain.reference.UseGhostMode (ghostModeDuration);
+		ghostModeCooldownTimer = ghostModeCooldown;
+		TrainTimeScript.reference.AddTime (-ghostModeCost);
 	}
 
 	void Update () 
 	{
+		if (ghostModeCooldownTimer > 0)
+			ghostModeCooldownTimer -= Time.deltaTime;
+
+		if(Input.GetKeyDown(ghostModeKey))
+		{
+			if (CanUseGhostMode ())
+				UseGhostMode ();
+		}
+
+		if (Input.GetKeyDown(stopKey))
+		{
+			GetComponent<PlayerTrain>().Stop();
+		}
+
 		if (Input.GetMouseButtonDown(0))
 		{
 			clickTimer = 0;
-
-
 		}
-		if (Input.GetMouseButton(0))
-		{
-			RaycastHit2D hit = Physics2D.GetRayIntersection(trainCamera.ScreenPointToRay(Input.mousePosition));
-			if (hit.collider != null)
-			{
-				if (hit.collider.gameObject.layer == LayerMask.NameToLayer("player"))
-				{
-					GameObject wagon = hit.collider.gameObject;
-					if (wagon.GetComponent<WagonScript>().isHead)
-					{
-						clickTimer += Time.deltaTime;
-						if (clickTimer >= ghostModeClickTime)
-						{
-							clickTimer = 0;
-							if (!ghostModeToggled)
-								ToggleGhostMode();
-						}
 
+		if (Input.GetMouseButton (0)) {
+			RaycastHit2D hit = Physics2D.GetRayIntersection (trainCamera.ScreenPointToRay (Input.mousePosition),100, 1 << LayerMask.NameToLayer("player"));
+			if (hit.collider != null) {
+				GameObject wagon = hit.collider.gameObject;
+				if (wagon.GetComponent<WagonScript> ().isHead) {
+					clickTimer += Time.deltaTime;
+					if (clickTimer >= ghostModeClickTime){
+						if (!GlobalUI.reference.IsState(GlobalUI.States.Inventory))
+							GlobalUI.reference.SetState (GlobalUI.States.Inventory);
 					}
 				}
 			}
 		}
 		if (Input.GetMouseButtonUp(0))
 		{
-			RaycastHit2D hit = Physics2D.GetRayIntersection(trainCamera.ScreenPointToRay(Input.mousePosition));
-			if (hit.collider != null)
-			{
-                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("player"))
-                {
-                    GameObject wagon = hit.collider.gameObject;
-                    if (!wagon.GetComponent<WagonScript>().isHead)
-                    {
-                        if (wagon.GetComponent<WagonScript>().CanCastSign() && GetComponent<SignsController>().CanCast())
-                        {
-                            wagon.GetComponent<Animator>().Play("wagonAnim");
-                            wagon.GetComponent<WagonScript>().CastSign();
-                        }
-                        
-                    }
-                    else
-                    {
-                        if (!ghostModeToggled)
-                        {
-							GlobalUI.reference.SetState (GlobalUI.States.Inventory);
-                        }
-                        else
-                        {
-                            ghostModeToggled = false;
-                        }
-                    }
-                }
-                else if (hit.collider.gameObject.layer == LayerMask.NameToLayer("objectToStop"))
-                {
-                    GetComponent<PlayerTrain>().StopNearNextObject();
-                }
+			RaycastHit2D hit = Physics2D.GetRayIntersection(trainCamera.ScreenPointToRay(Input.mousePosition),100, 1 << LayerMask.NameToLayer("player"));
+			if (hit.collider != null) {
+				GameObject wagon = hit.collider.gameObject;
+				if (!wagon.GetComponent<WagonScript> ().isHead) {
+					if (GetComponent<SignsController> ().CanCast (wagon.GetComponent<WagonScript> ().signType)) {
+						wagon.GetComponent<Animator> ().Play ("wagonAnim");
+						wagon.GetComponent<WagonScript> ().CastSign ();
+					}
+				} 
+				else if (clickTimer < ghostModeClickTime) {
+					if (CanUseGhostMode ())
+						UseGhostMode ();
+				}
 			}
-
-
-			
+			hit = Physics2D.GetRayIntersection(trainCamera.ScreenPointToRay(Input.mousePosition),100, 1 << LayerMask.NameToLayer("objectToStop"));
+			if (hit.collider != null){
+				if (hit.collider.gameObject.layer == LayerMask.NameToLayer("objectToStop")){
+					GetComponent<PlayerTrain>().StopNearNextObject();
+				}
+			}
 		}
 	}
 }

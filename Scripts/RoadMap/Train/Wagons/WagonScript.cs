@@ -10,8 +10,8 @@ public class WagonScript : MonoBehaviour {
 	public Transform sign;
 	public SignsController.SignType signType;
 	SignsController.SignType currentSign = SignsController.SignType.None;
-	public Transform nextPoint;
-	Transform nextUnreachedPoint;
+	public Transform nextUnreachedPoint;
+	Transform lastReachedPoint;
 	public float cameraOffset;
 
 	public GameObject signObject;
@@ -47,6 +47,12 @@ public class WagonScript : MonoBehaviour {
     {
         return isHead;
     }
+
+	public int GetIndex()
+	{
+		return transform.GetSiblingIndex ();
+	}
+
     public bool IsLast()
     {
         if (GetComponent<WagonConnector>())
@@ -89,13 +95,11 @@ public class WagonScript : MonoBehaviour {
 			sign.eulerAngles = new Vector3 (0,0,0);
 
 	}
-	public void Move(float speed)
+	void Move(float speed)
 	{
-		if ((nextPoint.position - transform.position).magnitude <= 0.01)
-			nextPoint = road.GetNextPoint (nextPoint);
-		GetComponent<Rigidbody2D>().velocity = (nextPoint.position - transform.position).normalized*speed;
-		if (nextUnreachedPoint != null)
-			Rotate();
+		
+		//if (nextUnreachedPoint != null)
+		Rotate();
 		if (isHead && !IsAI ())
 		{
 			float rotation = transform.localEulerAngles.z*Mathf.PI/180;
@@ -107,57 +111,49 @@ public class WagonScript : MonoBehaviour {
 
 	public void SetDestination(Transform point)
 	{
-		setNextPoint = true;;
-		nextUnreachedPoint = null;
-		nextPoint = point;
+		nextUnreachedPoint = point;
+		lastReachedPoint = null;
 	}
+
+	List<Transform> railPointsEntered = new List<Transform>();
 
 	void OnTriggerEnter2D(Collider2D coll)
 	{
 		if (coll.gameObject.layer == LayerMask.NameToLayer("road"))
 		{
-			nextUnreachedPoint = road.GetNextPoint(coll.transform); 
-		}
-	}
+			//if (isHead)
+			//	Debug.Log ("OnTriggerEnter2D hit road");
+			railPointsEntered.Add (coll.transform);
+			while (nextUnreachedPoint == null || railPointsEntered.Contains (nextUnreachedPoint)) {
+				if (nextUnreachedPoint == null)
+					nextUnreachedPoint = road.GetNextPoint (coll.transform);
+				else
+					nextUnreachedPoint = road.GetNextPoint (nextUnreachedPoint);
+			}
 
-	void OnTriggerStay2D(Collider2D coll)
-	{
+		}
+
 		if (gameObject.layer == LayerMask.NameToLayer ("enemy"))
 			return;
-		if (IsGhostMode ())
-			return;
-		if (coll.gameObject.layer == LayerMask.NameToLayer("enemy"))
-		{
-			Die ();
+		if (coll.gameObject.layer == LayerMask.NameToLayer ("enemy")) {
+			if (!isDead){
+				isDead = true;
+			}
 		}
 	}
 
+	bool isDead = false;
 	void Die()
 	{
 		GameController.reference.GameOver ();
 	}
 
 
-	bool setNextPoint = false;
 	void OnTriggerExit2D(Collider2D coll)
 	{
-		if (coll.gameObject.layer == LayerMask.NameToLayer("road"))
-		{
-			//nextPoint = road.GetNextPoint (coll.transform);
-			if (!setNextPoint)
-			{
-				nextPoint = road.GetNextPoint (nextPoint);
-
-			}
-			else
-			{
-				if (coll.transform == nextPoint)
-				{
-					setNextPoint = false;
-					nextPoint = road.GetNextPoint (coll.transform);
-				}
-			}
-
+		if (coll.gameObject.layer == LayerMask.NameToLayer("road")){
+			railPointsEntered.Remove (coll.transform);
+			lastReachedPoint = coll.transform;
 		}
 	}
 
@@ -165,12 +161,6 @@ public class WagonScript : MonoBehaviour {
 	{
 		TrainController controller = transform.parent.GetComponent<TrainController>();
 		return (controller is EnemyTrain);
-	}
-
-	bool IsGhostMode()
-	{
-		TrainController controller = transform.parent.GetComponent<TrainController>();
-		return (((PlayerTrain)controller).ghostMode);
 	}
 
 	float GetTrainSpeed()
@@ -194,35 +184,41 @@ public class WagonScript : MonoBehaviour {
 		currentSign = signType;
 		if (currentSign == SignsController.SignType.None)
 			return;
+
+		SignsController controller = transform.parent.GetComponent<SignsController>();
+		GameObject signPrefab = null;
 		if (currentSign == SignsController.SignType.Triangle)
 		{
-			SignsController controller = transform.parent.GetComponent<SignsController>();
-			GameObject signPrefab = ((Sign)controller.triangleSign).prefab;
+			signPrefab = ((Sign)controller.triangleSign).prefab;
 			signObject = Instantiate (signPrefab) as GameObject;
-			signObject.transform.parent = sign;
-			signObject.transform.localPosition = new Vector3(0,0,0);
-			signObject.transform.localScale = signPrefab.transform.localScale;
 		}
 		else if (currentSign == SignsController.SignType.Rectangle)
 		{
-			SignsController controller = transform.parent.GetComponent<SignsController>();
-			GameObject signPrefab = ((Sign)controller.rectangleSign).prefab;
+			signPrefab = ((Sign)controller.rectangleSign).prefab;
 			signObject = Instantiate (signPrefab) as GameObject;
-			signObject.transform.parent = sign;
-			signObject.transform.localPosition = new Vector3(0,0,0);
-			signObject.transform.localScale = signPrefab.transform.localScale;
 		}
-	}
-
-	public bool CanCastSign()
-	{
-		return currentSign != SignsController.SignType.None;
+		else if (currentSign == SignsController.SignType.Barrier)
+		{
+			signPrefab = ((Sign)controller.barrierSign).prefab;
+			signObject = Instantiate (signPrefab) as GameObject;
+		}
+		signObject.transform.parent = sign;
+		signObject.transform.localPosition = new Vector3(0,0,0);
+		signObject.transform.localEulerAngles = new Vector3(0,0,0);
+		signObject.transform.localScale = signPrefab.transform.localScale;
 	}
 
 	public void CastSign()
 	{
 		SignsController controller = transform.parent.GetComponent<SignsController>();
 		controller.CastSign(currentSign);
+	}
+
+	void FixedUpdate()
+	{
+		GetComponent<Rigidbody2D>().velocity = (nextUnreachedPoint.position - transform.position).normalized*GetTrainSpeed();
+		//Debug.Log (GetComponent<Rigidbody2D>().velocity);
+
 	}
 
 	void Update()
@@ -240,5 +236,10 @@ public class WagonScript : MonoBehaviour {
 			}
 		}
 
+		if (PlayerSaveData.reference.trainData.equippedItems [0] == null || PlayerSaveData.reference.trainData.equippedItems [0].IsBroken ())
+			isDead = true;
+		if (isDead) {
+			Die ();
+		}
 	}
 }

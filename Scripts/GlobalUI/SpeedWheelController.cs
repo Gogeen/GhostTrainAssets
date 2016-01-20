@@ -1,11 +1,48 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class SpeedWheelController : MonoBehaviour {
+
+	public static SpeedWheelController reference;
 
 	public Camera uiCamera;
 	public GameObject wheelCollider;
 	public Transform arrow;
+
+	public List<UISlider> hpScrollbars = new List<UISlider> ();
+
+	float GetWagonHP(int index)
+	{
+		float currentHP = 0;
+		float maxHP = 0;
+		if (index == 0) {
+			foreach (InventoryItemObject item in PlayerSaveData.reference.trainData.equippedItems) {
+				if (item == null)
+					continue;
+				currentHP += item.info.durabilityInfo.current;
+				maxHP += item.info.durabilityInfo.max;
+			}
+			if (maxHP == 0)
+				return 0;
+			return currentHP / maxHP;
+		} else {
+			foreach (InventoryItemObject item in PlayerSaveData.reference.wagonData[index-1].items) {
+				currentHP += item.info.durabilityInfo.current;
+				maxHP += item.info.durabilityInfo.max;
+			}
+			if (maxHP == 0)
+				return 0;
+			return currentHP / maxHP;
+		}
+	}
+
+	void UpdateScrollbars()
+	{
+		for (int wagonIndex = 0; wagonIndex < PlayerSaveData.reference.wagonData.Count + 1; wagonIndex++) {
+			hpScrollbars [wagonIndex].value = GetWagonHP (wagonIndex);
+		}
+	}
 
 	void Update()
 	{
@@ -13,6 +50,7 @@ public class SpeedWheelController : MonoBehaviour {
 		{
 			return;
 		}
+		UpdateScrollbars ();
 		RotateArrow ();
 		RaycastHit hit;
 		if (Input.GetMouseButton (0)) 
@@ -30,7 +68,11 @@ public class SpeedWheelController : MonoBehaviour {
 			
 		}
 	}
-		
+
+	public void ColorWheel(Color color)
+	{
+		GetComponent<UISprite> ().color = color;
+	}
 
 	void RotateArrow()
 	{
@@ -72,5 +114,9 @@ public class SpeedWheelController : MonoBehaviour {
 		PlayerTrain.reference.speedChangedManually = true;
 		
 	}
-	
+
+	public void OpenInventory()
+	{
+		GlobalUI.reference.SetState (GlobalUI.States.Inventory);
+	}
 }

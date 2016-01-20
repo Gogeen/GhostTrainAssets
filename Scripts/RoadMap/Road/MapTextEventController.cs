@@ -2,7 +2,7 @@
 using System.Collections;
 public class MapTextEventController : MonoBehaviour {
 
-	public TextQuest quest;
+	public string questName;
 	public GameObject target;
 	void OnTriggerEnter2D(Collider2D coll)
 	{
@@ -11,14 +11,14 @@ public class MapTextEventController : MonoBehaviour {
 			if (!coll.gameObject.GetComponent<WagonScript>().IsHead())
 				return;
 			Debug.Log(DialogueController.reference);
-			DialogueSystem.reference.StartQuest(quest);
+			DialogueSystem.reference.StartQuest(questName);
 		}
 	}
 
 	void Start()
 	{
-		if (target != null && quest != null) {
+		/*if (target != null && quest != null) {
 			quest.target = target;
-		}
+		}*/
 	}
 }

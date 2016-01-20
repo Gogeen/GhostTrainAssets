@@ -9,7 +9,7 @@ public class PlayerGhostModeSoundController : MonoBehaviour {
     public AudioClip endSound;
     bool startGM = false;
 
-    IEnumerator PlaySound()
+    /*IEnumerator PlaySound()
     {
         source.clip = startSound;
         source.Play();
@@ -19,23 +19,11 @@ public class PlayerGhostModeSoundController : MonoBehaviour {
         source.Play();
         source.loop = true;
 
-    }
+    }*/
 
     void Update()
     {
-        if (GetComponent<PlayerTrain>().ghostMode && !startGM)
-        {
-            startGM = true;
-            StartCoroutine("PlaySound");
-        }
-        else if (!GetComponent<PlayerTrain>().ghostMode && startGM)
-        {
-            startGM = false;
-            StopCoroutine("PlaySound");
-            source.clip = endSound;
-            source.Play();
-            source.loop = false;
-        }
+        
     }
 
 }

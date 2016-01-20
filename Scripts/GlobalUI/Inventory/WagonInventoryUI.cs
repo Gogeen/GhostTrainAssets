@@ -197,6 +197,43 @@ public class WagonInventoryUI : MonoBehaviour {
 		return false;
 	}
 
+	bool IsBarrier(int slotIndex)
+	{
+		Transform slot = slots[slotIndex];
+		if (InventorySystem.reference.IsSlotEmpty(slot))
+			return false;
+		InventoryItemObject item = InventorySystem.reference.GetItemObjectInSlot (slot);
+		if (item.info.name != itemForSignName)
+			return false;
+		if (item.IsBroken ())
+			return false;
+
+		int itemRowIndex = slotIndex % sizeX;
+		int cycleIterations = sizeX - 1 - itemRowIndex;
+
+		for (int signHeight = 1; signHeight <= cycleIterations; signHeight++)
+		{
+			// barrier sign check
+			if (slotIndex + sizeX * signHeight + signHeight >= slots.Count)
+				continue;
+			if (InventorySystem.reference.IsSlotEmpty(slots[slotIndex + 2*signHeight]) || InventorySystem.reference.IsSlotEmpty(slots[slotIndex + sizeX * signHeight + signHeight]))
+				continue;
+			if ((slotIndex) / sizeX != (slotIndex + 2*signHeight) / sizeX)
+				continue;
+			if (InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + 2*signHeight]).info.name == itemForSignName &&
+				InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight + signHeight]).info.name == itemForSignName)
+			{
+				if (InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + 2*signHeight]).IsBroken() ||
+					InventorySystem.reference.GetItemObjectInSlot (slots[slotIndex + sizeX * signHeight + signHeight]).IsBroken())
+				{
+					continue;
+				}
+				else return true;
+			}
+		}
+		return false;
+	}
+
 	public void CheckSigns()
 	{
 		if (wagonGameObject == null)
@@ -213,6 +250,11 @@ public class WagonInventoryUI : MonoBehaviour {
 			else if (IsRectangle(slotIndex))
 			{
 				wagonGameObject.GetComponent<WagonScript>().signType = SignsController.SignType.Rectangle;
+				return;
+			}
+			else if (IsBarrier(slotIndex))
+			{
+				wagonGameObject.GetComponent<WagonScript>().signType = SignsController.SignType.Barrier;
 				return;
 			}
 

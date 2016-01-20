@@ -263,59 +263,17 @@ public class TrainTimeScript : MonoBehaviour {
 			return;
 		}
 		gameSeconds -= Time.deltaTime;
-		if (PlayerTrain.reference.ghostMode) 
+		/*if (PlayerTrain.reference.ghostMode) 
 		{
 			gameSeconds -= Time.deltaTime;
-		}
+		}*/
 		while (gameSeconds < 0)
 		{
 			gameSeconds += 1;
 			AddTime (-1);
 		}
 	}
-
-	IEnumerator GameTimer()
-	{
-		Debug.Log ("start timer");
-		while (true) 
-		{
-			if (IsTimeOut())
-			{
-				//Debug.Log ("time is out");
-				break;
-			}
-			if (PlayerTrain.reference == null)
-			{
-				//Debug.Log ("player not initialized");
-				yield return null;
-				//continue;
-			}
-			else
-			{
-				if (PlayerTrain.reference.ghostMode) 
-				{
-					gameSeconds -= Time.deltaTime;
-
-				}
-			}
-			gameSeconds -= Time.deltaTime;
-			Debug.Log ("timer works");
-			while (gameSeconds < 0)
-			{
-				gameSeconds += 1;
-				AddTime (-1);
-			}
-			yield return null;
-		}
-		Debug.Log ("finished timer");
-
-	}
-
-	void Start()
-	{
-		//StartCoroutine ("GameTimer");
-	}
-
+		
 	void Update()
 	{
 		UpdateUI ();

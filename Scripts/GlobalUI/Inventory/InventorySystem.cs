@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.Linq;
 public class InventorySystem : MonoBehaviour {
 
 	public enum SlotType
@@ -77,7 +77,7 @@ public class InventorySystem : MonoBehaviour {
 			slotInfo.wagonIndex = -1;
 			return slotInfo;
 		}
-		Debug.Log ("GetSlotType Broken! "+slot);
+		//Debug.Log ("GetSlotType Broken! "+slot);
 		return null;
 	}
 
@@ -120,7 +120,7 @@ public class InventorySystem : MonoBehaviour {
 
 	public void CheckSynergy(int wagonIndex)
 	{
-		Debug.Log ("synergy check");
+		//Debug.Log ("synergy check");
 		// check attraction synergy
 		bool isSynergy = true;
 		int synergyItemsCount = 0;
@@ -146,7 +146,7 @@ public class InventorySystem : MonoBehaviour {
 		synergyItemsCount = 0;
 		foreach(InventoryItemObject item in PlayerSaveData.reference.wagonData[wagonIndex].items)
 		{
-			Debug.Log (item.info.name);
+			//Debug.Log (item.info.name);
 			if (item.info.bonusInfo.magicPower > 0){
 				synergyItemsCount += 1;
 			}else{
@@ -166,7 +166,7 @@ public class InventorySystem : MonoBehaviour {
 
 	void ApplySynergyEffect(SynergyType type, int wagonIndex, int itemsCount)
 	{
-		Debug.Log ("applying synergy");
+		//Debug.Log ("applying synergy");
 		if (type == SynergyType.Attraction) {
 			PlayerSaveData.reference.wagonData [wagonIndex].attraction -= PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction;
 			PlayerSaveData.reference.wagonData [wagonIndex].synergyAttraction = itemsCount * synergyModifier * PlayerSaveData.reference.wagonData [wagonIndex].attraction / 100;
@@ -207,6 +207,8 @@ public class InventorySystem : MonoBehaviour {
 			}
 		}
 		foreach(InventoryItemObject item in PlayerSaveData.reference.trainData.equippedItems){
+			if (item == null)
+				continue;
 			totalRepairCost += item.GetRepairCost ();
 		}
 		return (int)totalRepairCost;
@@ -233,6 +235,28 @@ public class InventorySystem : MonoBehaviour {
 
 	}
 
+	public void RepairWholeInventory(float value, bool isFree = false)
+	{
+		float totalRepairCost = 0;
+		foreach(PlayerSaveData.WagonData wagon in PlayerSaveData.reference.wagonData)
+		{
+			foreach(InventoryItemObject item in wagon.items)
+			{
+				totalRepairCost += item.GetRepairCost ();
+				item.Repair (value, isFree);
+			}
+		}
+		foreach(InventoryItemObject item in PlayerSaveData.reference.trainData.equippedItems)
+		{
+			totalRepairCost += item.GetRepairCost ();
+			item.Repair (value, isFree);
+		}
+		if (!isFree) {
+			TrainTimeScript.reference.SimulateWaitForPassengers (totalRepairCost);
+		}
+		selectingItemToRepair = false;
+	}
+
 	public void RepairItem(InventoryItemObject item)
 	{
 		TrainTimeScript.reference.SimulateWaitForPassengers (item.GetRepairCost());
@@ -251,31 +275,13 @@ public class InventorySystem : MonoBehaviour {
 		selectingItemToRepair = true;
 	}
 
-	public void BreakItem(InventoryItemObject item, float value)
-	{
-		item.Break (value);
-	}
 
-	public void BreakWholeInventory(float value)
-	{
-		foreach (WagonInventoryUI wagonUI in wagonUIs)
-		{
-			foreach(Transform slot in wagonUI.slots)
-			{
-				if (GetItemObjectInSlot(slot) != null)
-					BreakItem(GetItemObjectInSlot(slot), value);
-			}
-		}
-		foreach (InventoryItemObject equippedItem in PlayerSaveData.reference.trainData.equippedItems)
-		{
-			if (equippedItem != null)
-				BreakItem(equippedItem, value);
-		}
-	}
 
 	public InventoryItemObject FindItem(string name)
 	{
 		foreach (InventoryItemObject item in PlayerSaveData.reference.trainData.equippedItems) {
+			if (item == null)
+				continue;
 			if (item.info.name == name)
 				return item;
 		}
@@ -445,6 +451,9 @@ public class InventorySystem : MonoBehaviour {
 	public void ToggleShopUI()
 	{
 		shopUI.SetActive (!shopUI.activeSelf);
+		if (shopUI.activeSelf) {
+			SortShop ();
+		}
 	}
 
 	VendorShop vendorShopInfo;
@@ -456,6 +465,35 @@ public class InventorySystem : MonoBehaviour {
 	public VendorShop GetVendorShopInfo()
 	{
 		return vendorShopInfo;
+	}
+
+	public void SortShop()
+	{
+		
+		List<InventoryItemObject> items = new List<InventoryItemObject> ();
+		foreach(Transform slot in shopInventory.slots){
+			InventoryItemObject item = GetItemObjectInSlot(slot);
+			if (item != null){
+				items.Add (item);
+
+				item.Take ();
+				item.transform.parent = null;
+			}	
+		}
+		List<InventoryItemObject> sortedItems;
+		//sortedItems = items.OrderByDescending(go=>go.info.uiInfo.size.x*go.info.uiInfo.size.y).ToList();
+		//sortedItems = items.OrderBy(go=>go.info.name).ToList();
+		sortedItems = items.OrderBy(go=>go.info.costInfo.timePrice).ToList();
+		//sortedItems.Reverse();
+		
+		foreach(InventoryItemObject itemObj in sortedItems)
+		{
+			itemObj.Place (FindEmptySlot (itemObj, SlotType.Shop));
+			//InventoryItem item = ItemDatabase.reference.FindByIndex(itemObj.info.databaseIndex);
+			//InitItem (item, SlotType.Shop); // need to be initialized in shop inventory, not player inventory
+
+		}
+
 	}
 
 	public IEnumerator InitShop()
@@ -499,7 +537,9 @@ public class InventorySystem : MonoBehaviour {
 			//Debug.Log ("shop is not active");
 			return item.info.costInfo.timePrice;
 		}
-		Transform slot = item.transform.parent.parent;
+		Transform slot = item.GetSlot();
+		if (slot == null)
+			return 0;
 		WagonInventoryUI inventory = slot.parent.parent.GetComponent<WagonInventoryUI>();
 		if (inventory == shopInventory) 
 		{

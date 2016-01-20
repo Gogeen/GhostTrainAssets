@@ -16,7 +16,6 @@ public class StrategyMapUIController : MonoBehaviour {
 	public Transform roads;
 	public GameObject roadProgressbar;
 	public UILabel travelTimer;
-	public GameObject startButton;
 
 	public void LoadInfo()
 	{
@@ -26,7 +25,6 @@ public class StrategyMapUIController : MonoBehaviour {
 			if (info.reference != null)
 				Destroy(info.reference);
 		}
-		startButton.SetActive (false);
 	}
 
 	public string GetDestinationTownName()
@@ -227,15 +225,6 @@ public class StrategyMapUIController : MonoBehaviour {
 	void Update()
 	{
 		UpdateTravelTimer ();
-
-        if (destinationTown != null)
-        {
-            startButton.SetActive(true);
-        }
-        else
-        {
-            startButton.SetActive(false);
-        }
 
 		if (currentTown != null && currentTownFrame != null) 
 		{

@@ -13,6 +13,7 @@ public class UIThroughEntireGame : MonoBehaviour {
 	public TownController townController;
 	public WaystationController waystationController;
 	public StrategyMapUIController strategyMapController;
+	public SpeedWheelController speedWheelController;
 	void Awake()
 	{
 		if (reference == null) 
@@ -33,6 +34,7 @@ public class UIThroughEntireGame : MonoBehaviour {
 			TownController.reference = townController;
 			WaystationController.reference = waystationController;
 			StrategyMapUIController.reference = strategyMapController;
+			SpeedWheelController.reference = speedWheelController;
 		}
 		else
 		{

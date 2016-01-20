@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class TextQuest : ScriptableObject {
 
-	public string name;
+	new public string name;
     public bool showUnavailableAnswers;
     public int startNodeIndex;
     public int finishNodeIndex;
@@ -127,7 +127,11 @@ public class TextQuest : ScriptableObject {
 					return true;
 			}
 			return false;
-		} else
+		} else if (name == "mail complete") {
+			if (!MailQuestsController.reference.IsTimeOut ())
+				return true;
+			return false;
+		}else
 			return true;
 	}
 
@@ -161,6 +165,27 @@ public class TextQuest : ScriptableObject {
 				//Debug.Log ("need to remove waystation here");
 				if (target != null)
 					target.SetActive (false);
+			}
+		}
+		else if (name == "mail01")
+		{
+			if (index == 1)
+			{
+				InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName("письмо"),InventorySystem.SlotType.Wagon);
+				MailQuestsController.reference.StartQuestTimer (180);
+				MailQuestsController.reference.canComplete = false;
+				//PlayerSaveData.reference.quests.Add (JournalQuestsDatabase.reference.FindByName("почтовое поручение"));
+				//PlayerSaveData.reference.quests [PlayerSaveData.reference.quests.Count - 1].currentStage = 0;
+			}
+		}
+		else if (name == "mail complete")
+		{
+			if (index == 1)
+			{
+				TrainTimeScript.reference.AddTime (180);
+				MailQuestsController.reference.EndQuest();
+
+				//PlayerSaveData.reference.quests[PlayerSaveData.reference.quests.LastIndexOf(JournalQuestsDatabase.reference.FindByName ("почтовое поручение"))].currentStage = 1;
 			}
 		}
 	}

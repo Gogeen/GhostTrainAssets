@@ -10,6 +10,8 @@ public class SlowAnomaly : Anomaly {
 		{
             if (!coll.gameObject.GetComponent<WagonScript>().IsHead())
                 return;
+			if (PlayerSaveData.reference.trainData.conditions.LostControl)
+				return;
 			TrainController trainController = coll.transform.parent.GetComponent<TrainController>();
 			trainController.speedDebuffPercent += strength;
             source.Play();

@@ -6,10 +6,12 @@ public class TownController : MonoBehaviour {
 	public static TownController reference;
 
 	public GameObject TravelButtonPanel;
-	public string name;
+	new public string name;
 	public WorldTowns.PassengerInfo passengerInfo;
 	public VendorShop shopInfo;
-	public TextQuest quest;
+	public string questName;
+	public TextQuest mailQuest;
+	public TextQuest mailCompleteQuest;
 
     public int levelToLoadIndex = 2;
     
@@ -19,6 +21,9 @@ public class TownController : MonoBehaviour {
 		PlayerSaveData.reference.Save ();
 		PlayerSaveData.reference.LoadTownInfo (StrategyMapUIController.reference.GetDestinationTownName ());
 		GameController.reference.LoadMap(mapIndex);
+		PlayerSaveData.reference.trainData.conditions.LostControl = false;
+		MailQuestsController.reference.canComplete = true;
+
 	}
 
 	public void ActivateTravelButton()
@@ -44,16 +49,34 @@ public class TownController : MonoBehaviour {
 
 	public void StartQuest()
 	{
-		if (quest != null)
-		{
-			DialogueSystem.reference.StartQuest (quest);
-			quest = null;
-		}
+		if (questName != "")
+			DialogueSystem.reference.StartQuest (questName);
+		questName = "";
+
+	}
+
+	public void StartMailQuest()
+	{
+		/*
+		if (!MailQuestsController.reference.inProgress) {
+			if (mailQuest != null) {
+				DialogueSystem.reference.StartQuest (mailQuest);
+			}
+		} else if (MailQuestsController.reference.canComplete) {
+			if (mailCompleteQuest != null) {
+				DialogueSystem.reference.StartQuest (mailCompleteQuest);
+			}
+		}*/
 	}
 
 	// !!! need to rewrite shop opening part
 	public void OpenShop()
 	{
 		GlobalUI.reference.SetState (GlobalUI.States.Shop);
+	}
+
+	void Update()
+	{
+		
 	}
 }

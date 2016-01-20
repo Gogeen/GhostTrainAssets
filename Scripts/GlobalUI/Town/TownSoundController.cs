@@ -6,7 +6,7 @@ public class TownSoundController : MonoBehaviour {
     public AudioClip startSound;
     public AudioClip cycleSound;
     public AudioClip endSound;
-    bool playSound = false;
+    //bool playSound = false;
     IEnumerator PlaySound()
     {
         source.clip = startSound;

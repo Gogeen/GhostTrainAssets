@@ -11,8 +11,8 @@ public class RoadObjectTownController : MonoBehaviour {
 		{
 			PlayerTrain.reference.Stop();
 			PlayerTrain.reference.AccelerateTo(0);
-			PlayerTrain.reference.canControl = false;
-			
+			PlayerSaveData.reference.trainData.conditions.LostControl = true;
+
 		}
 	}
 
@@ -22,9 +22,11 @@ public class RoadObjectTownController : MonoBehaviour {
 		{
 			if (PlayerTrain.reference.speed == 0)
 			{
+				GetComponent<BoxCollider2D> ().enabled = false;
 				Debug.Log ("finished map");
 				TrainTimeScript.reference.ComeInCommunity();
-                Application.LoadLevel(1);
+				GlobalUI.reference.SetState (GlobalUI.States.Town);
+                //Application.LoadLevel(1);
 			}
 		}
 	}

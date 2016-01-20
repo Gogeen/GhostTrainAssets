@@ -7,7 +7,7 @@ public class RoadPileCollisionController : MonoBehaviour {
 	{
 		if (coll.gameObject.layer == LayerMask.NameToLayer("player"))
 		{
-			InventorySystem.reference.BreakWholeInventory(transform.parent.GetComponent<RoadPile>().hitDamage);
+			InventoryItemsBreakSystem.reference.BreakWagon(0, transform.parent.GetComponent<RoadPile>().hitDamage);
 			Destroy (transform.parent.gameObject);
 		}
 	}

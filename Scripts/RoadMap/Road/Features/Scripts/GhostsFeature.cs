@@ -4,9 +4,13 @@ using System.Collections.Generic;
 
 public class GhostsFeature : RoadFeature {
 
-	public float tickTime;
+	public float tickTimeMin;
+	public float tickTimeMax;
+	public float packTickTimeMin;
+	public float packTickTimeMax;
 	float tickTimer;
-	int ghostCount;
+	float packTickTimer;
+	public int ghostsInPack;
 	public int maxGhostCount;
 	float speedPenalty;
 	[Range(0,100)]public float ghostStrength;
@@ -14,15 +18,20 @@ public class GhostsFeature : RoadFeature {
 	bool canCast;
 
 	public GameObject ghostPrefab;
-	List<GameObject> spawnedGhosts = new List<GameObject>();
-	void SpawnGhost(PlayerTrain playerTrain)
-	{
-		ghostCount += 1;
-		Debug.Log ("ghosts: "+ghostCount);
-		GameObject newGhost = Instantiate (ghostPrefab) as GameObject;
-		spawnedGhosts.Add (newGhost);
-		newGhost.GetComponent<GhostController> ().feature = this;
+	List<GhostInfo> spawnedGhosts = new List<GhostInfo>();
 
+	class GhostInfo
+	{
+		public GameObject obj;
+		public int wagonIndex;
+	}
+
+	void SpawnGhost(PlayerTrain playerTrain, Vector3 side)
+	{
+		GhostInfo info = new GhostInfo ();
+		GameObject newGhost = Instantiate (ghostPrefab) as GameObject;
+		newGhost.GetComponent<GhostController> ().feature = this;
+		info.obj = newGhost;
 		int wagonsCount = 0;
 		for(int childIndex = 0; childIndex < playerTrain.transform.childCount; childIndex++)
 		{
@@ -38,14 +47,18 @@ public class GhostsFeature : RoadFeature {
 			// try to get random wagon point
 			wagon = playerTrain.GetWagon (Random.Range(0,wagonsCount));
 			spawnPoint = wagon.GetGhostPoint ();
-			if (spawnPoint != null)
+			if (spawnPoint != null) {
+				info.wagonIndex = wagon.GetIndex ();
 				break;
+			}
 
 
 			wagon = playerTrain.GetWagon (wagonIndex);
 			spawnPoint = wagon.GetGhostPoint ();
-			if (spawnPoint != null)
+			if (spawnPoint != null) {
+				info.wagonIndex = wagon.GetIndex ();
 				break;
+			}
 
 		}
 		//GameObject wagon = playerTrain.GetWagon (Random.Range(0,wagonsCount)).gameObject;
@@ -55,16 +68,18 @@ public class GhostsFeature : RoadFeature {
 		newGhost.transform.parent = spawnPoint;
 		newGhost.transform.localPosition = new Vector3(0,0,0);
 		newGhost.transform.localScale = new Vector3(1,1,1);
-		newGhost.transform.localEulerAngles = new Vector3(0,0,Random.Range(0.0f, 360.0f));
+		newGhost.transform.localEulerAngles = side;
 		newGhost.GetComponent<Animator>().Play("move");
+
+		spawnedGhosts.Add (info);
+
 	}
 
 	void RemoveGhosts()
 	{
-		ghostCount = 0;
 		for(int ghostIndex = spawnedGhosts.Count - 1; ghostIndex >= 0; ghostIndex--)
 		{
-			Destroy (spawnedGhosts[ghostIndex]);
+			Destroy (spawnedGhosts[ghostIndex].obj);
 		}
 		spawnedGhosts.Clear ();
 	}
@@ -87,10 +102,14 @@ public class GhostsFeature : RoadFeature {
 		canCast = false;
 		while (true)
 		{
+			if (!turnedOn) {
+				yield return null;
+				continue;
+			}
 			if (stopFeature)
 			{
 				stopFeature = false;
-				tickTimer = tickTime;
+				tickTimer = Random.Range(tickTimeMin, tickTimeMax);
 				RemoveGhosts();
 				playerTrain.speedDebuffPercent -= speedPenalty;
 				speedPenalty = 0;
@@ -98,24 +117,37 @@ public class GhostsFeature : RoadFeature {
 			}
 			if (tickTimer <= 0)
 			{
-				tickTimer = tickTime;
-				for(int ghostIndex = 0; ghostIndex < ghostCount; ghostIndex++)
-					InventorySystem.reference.BreakItem (InventorySystem.reference.GetRandomItem(), ghostBreakingStrength);
-				if (ghostCount < maxGhostCount)
+				tickTimer = Random.Range(tickTimeMin, tickTimeMax);
+				for(int ghostIndex = 0; ghostIndex < spawnedGhosts.Count; ghostIndex++)
+					InventoryItemsBreakSystem.reference.BreakWagon (spawnedGhosts[ghostIndex].wagonIndex, ghostBreakingStrength, true);
+				if (spawnedGhosts.Count < maxGhostCount)
 				{
-					SpawnGhost(playerTrain);
+					SpawnGhost(playerTrain, new Vector3(0,0,Random.Range(0.0f, 360.0f)));
 
 				}
 			}
+			if (packTickTimer <= 0) {
+				packTickTimer = Random.Range(packTickTimeMin, packTickTimeMax);
+				Vector3 side = new Vector3(0,0,Random.Range(0.0f, 360.0f));
+				for (int ghostIndex = 0; ghostIndex < ghostsInPack; ghostIndex++) {
+					if (spawnedGhosts.Count < maxGhostCount)
+					{
+						SpawnGhost(playerTrain, side);
+
+					}
+				}
+					
+			}
 			tickTimer -= Time.deltaTime;
+			packTickTimer -= Time.deltaTime;
 			yield return null;
 		}
 	}
 
 	public override void OnStart()
 	{
-		ghostCount = 0;
-		tickTimer = tickTime;
+		tickTimer = Random.Range(tickTimeMin, tickTimeMax);
+		packTickTimer = Random.Range(packTickTimeMin, packTickTimeMax);
 		canCast = true;
 		speedPenalty = 0;
 	}

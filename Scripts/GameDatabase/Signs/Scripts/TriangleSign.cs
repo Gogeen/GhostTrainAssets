@@ -11,16 +11,16 @@ public class TriangleSign : Sign {
 		if (roadFeature != null)
 			roadFeature.stopFeature = true;
 
-		playerTrain.canControl = false;
-		//playerTrain.wheelImage.color = Color.red;
+		PlayerSaveData.reference.trainData.conditions.LostControl = true;
+		SpeedWheelController.reference.ColorWheel(Color.red);
 		playerTrain.speedDebuffPercent -= strength;
 
 		playerTrain.AccelerateTo (playerTrain.GetCurrentMaxSpeed());
 		yield return new WaitForSeconds (duration);
 
 		playerTrain.speedDebuffPercent += strength;
-		//playerTrain.wheelImage.color = Color.white;
-		playerTrain.canControl = true;
+		SpeedWheelController.reference.ColorWheel(Color.white);
+		PlayerSaveData.reference.trainData.conditions.LostControl = false;
 
 		if (roadFeature != null)
 			roadFeature.stopFeature = false;

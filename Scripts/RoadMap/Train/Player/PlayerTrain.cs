@@ -1,14 +1,40 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PlayerTrain : TrainController {
 
 	public static PlayerTrain reference = null;
 
-	public bool canControl = true;
-	public bool ghostMode = false;
+	public GameObject GhostModeSign;
 
     public bool nearObject = false;
+
+	List<GameObject> pilesNear = new List<GameObject> ();
+
+	public List<GameObject> GetPilesNear()
+	{
+		for(int index = pilesNear.Count-1; index >= 0; index--)
+			if (pilesNear[index] == null)
+				pilesNear.RemoveAt (index);
+		return pilesNear;
+	}
+
+	public void AddPileNear(GameObject pile)
+	{
+		pilesNear.Add (pile);
+	}
+
+	public void RemovePileNear(GameObject pile)
+	{
+		if (pilesNear.Contains(pile))
+			pilesNear.Remove (pile);
+	}
+
+	public void ClearPilesNear()
+	{
+		pilesNear.Clear ();
+	}
 
 	public WagonScript GetWagon(int index)
 	{
@@ -53,43 +79,12 @@ public class PlayerTrain : TrainController {
         Stop();
     }
 
-    public void ToggleGhostMode(bool value)
+	public void UseGhostMode(float duration)
 	{
-		ghostMode = value;
+		GetComponent<SignsController> ().RemoveCooldowns (duration);
 
-		for(int wagonIndex = 0; wagonIndex < transform.childCount; wagonIndex++)
-		{
-            Transform wagon = transform.GetChild(wagonIndex);
-            if (wagon.GetComponent<WagonScript>() == null)
-                continue;
-            SpriteRenderer wagonSprite = wagon.GetChild(0).GetComponent<SpriteRenderer>();
-			Color wagonColor = wagonSprite.color;
-			if (ghostMode)
-			{	
-				wagonColor.a = 0.5f;
-			}
-			else
-			{
-				wagonColor.a = 1f;
-			}
-			wagonSprite.color = wagonColor;
-
-			if (wagon.GetComponent<WagonScript>().sign == null)
-				continue;
-
-			SpriteRenderer signSprite = wagon.GetComponent<WagonScript>().sign.GetComponent<SpriteRenderer>();
-			Color signColor = signSprite.color;
-			if (ghostMode)
-			{	
-				signColor.a = 0.5f;
-			}
-			else
-			{
-				signColor.a = 1f;
-			}
-			signSprite.color = signColor;
-		}
-		
+		GhostModeSign.GetComponent<Animator> ().Play ("cooldown");
+		GhostModeSign.GetComponent<Animator> ().speed = 1 / GetComponent<TrainEventManager>().ghostModeCooldown;
 	}
 
 	public override void Start () {
@@ -128,7 +123,7 @@ public class PlayerTrain : TrainController {
 	{
 		maxSpeed = PlayerSaveData.reference.trainData.GetCurrentSpeed ();
 
-		if (canControl)
+		if (!PlayerSaveData.reference.trainData.conditions.LostControl)
         {
             if (speedChangedManually)
             {
@@ -137,17 +132,9 @@ public class PlayerTrain : TrainController {
             }
             AccelerateTo(GetWheelSpeed());
         }
-		    
-		
-		if (Input.GetKeyDown(KeyCode.Space))
-		{
-			Stop();
-		}
 
-		if(Input.GetKeyDown("z"))
-		{
-			ToggleGhostMode(!ghostMode);
-		}
 		InventorySystem.reference.CheckSigns ();
+		acceleration = GetCurrentMaxSpeed ();
+
 	}
 }

@@ -5,7 +5,7 @@ public class WaystationController : MonoBehaviour {
 
 	public static WaystationController reference;
 
-	public string name;
+	new public string name;
 	public WorldTowns.PassengerInfo passengerInfo;
 	public VendorShop shopInfo;
 

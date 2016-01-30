@@ -145,6 +145,7 @@ public class PlayerSaveData : MonoBehaviour {
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовый смазочный механизм"), InventorySystem.SlotType.Equipment);
 
 		// first wagon
+		/*
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,0,0);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,0,12);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("отстойное купе"), InventorySystem.SlotType.Wagon,0,24);
@@ -163,8 +164,16 @@ public class PlayerSaveData : MonoBehaviour {
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,0,35);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,0,41);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("сахар"), InventorySystem.SlotType.Wagon,0,47);
+		*/
+
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0);
 
 		// second wagon
+		/*
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,1,0);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,1,12);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("базовое купе"), InventorySystem.SlotType.Wagon,1,24);
@@ -177,22 +186,28 @@ public class PlayerSaveData : MonoBehaviour {
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стул"), InventorySystem.SlotType.Wagon,1,40);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стол"), InventorySystem.SlotType.Wagon,1,37);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("стол"), InventorySystem.SlotType.Wagon,1,41);
+		*/
+
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1);
+
 
 		// third wagon
+		/*
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon,2,0);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon,2,4);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon,2,36);
 		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("круг призыва"), InventorySystem.SlotType.Wagon,2,40);
-		/*
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0, 30);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0, 25);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,0, 32);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 6);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 7);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 12);
-		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,1, 13);
 		*/
 
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,2);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,2);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,2);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,2);
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName ("фонарь"), InventorySystem.SlotType.Wagon,2);
 	}
 
 	void Awake()
@@ -320,6 +335,7 @@ public class PlayerSaveData : MonoBehaviour {
 		public List<ItemData> items = new List<ItemData>();
 		public string townName;
 		public WorldData worldData = new WorldData();
+		public Dictionary<string, int> questParameters = new Dictionary<string, int> ();
 	}
 
 	[Serializable]
@@ -406,6 +422,8 @@ public class PlayerSaveData : MonoBehaviour {
 		saveData.worldData.mailData.canComplete = MailQuestsController.reference.canComplete;
 		saveData.worldData.mailData.inProgress = MailQuestsController.reference.inProgress;
 
+		saveData.questParameters = QuestsController.globalParameters;
+
 		bf.Serialize(file, saveData);
 		file.Close();
 		Debug.Log("Saved!" + " " + Application.persistentDataPath);
@@ -476,6 +494,8 @@ public class PlayerSaveData : MonoBehaviour {
 			MailQuestsController.reference.timeForQuest = saveData.worldData.mailData.remainingTime;
 			MailQuestsController.reference.canComplete = saveData.worldData.mailData.canComplete;
 			MailQuestsController.reference.inProgress = saveData.worldData.mailData.inProgress;
+
+			QuestsController.globalParameters = saveData.questParameters;
 
 
 			file.Close();

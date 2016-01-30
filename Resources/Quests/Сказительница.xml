@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Пишем здесь все параметры, используемые в квесте -->
+
+<!-- Локальные -->
+<!-- usedScales - были ли использованы весы судьбы(0-1) -->
+
+<!-- Глобальные -->
+<!-- lostWaystation - исчезнет ли вскоре полустанок(0-1) -->
+<!-- lostLamp - исчезнет ли вскоре фонарь(0-1) -->
+<!-- gotBlackKey - получен ли ключ для следующего квеста(0-1) -->
+
+<Quest name="Сказительница">
+  <Settings>
+    <ShowUnavailableAnswers value = "false"/>
+  </Settings>
+  <Requirements/>
+  <Nodes>
+    <Node name="Сказительница  «Истории»" imageName="wheelBackground">
+      <Text>
+        <Part text="Сказительница  «Истории» написано на табличке, которую она держит в руках. Высокая нескладная женщина в цветастом 
+платке стоит прямо на рельсах и не желает сходить. Кажется, она уверена в том, что поезд остановится перед ней.">
+          <Requirements/>
+        </Part>
+      </Text>
+      <Answers>
+        <Answer text="Не останавливаться" imageName="imageName">
+          <Pointer>Свет выхватывает лицо женщины</Pointer>
+          <Requirements/>
+          <Results/>
+        </Answer>
+		<Answer text="Остановиться и выйти к ней" imageName="imageName">
+          <Pointer>Женщина таинственно улыбается</Pointer>
+          <Requirements/>
+          <Results>
+            <Result function = "AddLocalParameter" parameter1 = "usedScales" parameter2 = "0"/>
+          </Results>
+        </Answer>
+      </Answers>
+    </Node>
+	<Node name="Свет выхватывает лицо женщины" imageName="imageName">
+      <Text>
+        <Part text="Свет выхватывает лицо женщины. Она ехидно улыбается и прыгает под колёса. Звука столкновения не слышно. Только едва видимый лазурный дым растекается по кабине машиниста. ">
+          <Requirements/>
+        </Part>
+      </Text>
+      <Answers>
+        <Answer text="Конец." imageName="imageName">
+          <Pointer/>
+          <Requirements/>
+          <Results>
+		    <Result function = "AddGlobalParameter" parameter1 = "lostWaystation" parameter2 = "1"/>
+		  </Results>
+        </Answer>
+      </Answers>
+    </Node>
+	<Node name="Женщина таинственно улыбается" imageName="imageName">
+      <Text>
+        <Part text="Женщина таинственно улыбается, когда вы открываете дверь кабины. - Давно никто не останавливался, чтобы рассказать мне историю. 
+Только говори правду, путешественник. Как знать, может и я поделюсь с тобой своими сказаниями. ">
+          <Requirements>
+		    <Requirement function = "Equal" parameter1 = "usedScales" parameter2 = "0"/>
+		  </Requirements>
+        </Part>
+		<Part text="“Скрытность - путь к разочарованию” - говорят весы.">
+          <Requirements>
+		    <Requirement function = "Equal" parameter1 = "usedScales" parameter2 = "1"/>
+		  </Requirements>
+        </Part>
+      </Text>
+      <Answers>
+        <Answer text="Я передумал. [Вернуться в кабину и уехать.]" imageName="imageName">
+          <Pointer/>
+          <Requirements/>
+          <Results/>
+        </Answer>
+		<Answer text="[Сочинить историю и выдать её за правду.]" imageName="imageName">
+          <Pointer>Твоя история хороша</Pointer>
+          <Requirements/>
+          <Results/>
+        </Answer>
+		<Answer text="[Рассказать про сделку с мистером драконом]" imageName="imageName">
+          <Pointer>О нём ходили разные слухи</Pointer>
+          <Requirements/>
+          <Results/>
+        </Answer>
+		<Answer text="[Рассказать про приключения в дороге и магические фонари]" imageName="imageName">
+          <Pointer>Никогда не знаешь, с чём столкнёшься</Pointer>
+          <Requirements/>
+          <Results/>
+        </Answer>
+		<Answer text="[Рассказать про свои таланты обращения с временем и пространством]" imageName="imageName">
+          <Pointer>Такие таланты не приобретаются просто так</Pointer>
+          <Requirements/>
+          <Results/>
+        </Answer>
+		<Answer text="Использовать весы судьбы" imageName="imageName">
+          <Pointer>Женщина таинственно улыбается</Pointer>
+          <Requirements>
+		    <Requirement function = "HasScales"/>
+		    <Requirement type = "and" function = "Equal" parameter1 = "usedScales" parameter2 = "0"/>
+		  </Requirements>
+          <Results>
+		    <Result function = "IncreaseLocalParameter" parameter1 = "usedScales"/>
+		  </Results>
+        </Answer>
+      </Answers>
+    </Node>
+	<Node name="Твоя история хороша" imageName="imageName">
+      <Text>
+        <Part text="- Твоя история хороша, путешественник. Однако я решила не делиться своей. Прощай, и пусть дорога будет милостива к тебе.">
+          <Requirements/>
+        </Part>
+      </Text>
+      <Answers>
+        <Answer text="Конец." imageName="imageName">
+          <Pointer/>
+          <Requirements/>
+          <Results>
+		    <Result function = "AddGlobalParameter" parameter1 = "lostLamp" parameter2 = "1"/>
+		  </Results>
+        </Answer>
+      </Answers>
+    </Node>
+	<Node name="О нём ходили разные слухи" imageName="imageName">
+      <Text>
+        <Part text="О нём ходили разные слухи. Кто-то говорил, что он мудрый правитель. Кто-то - что он беспощадный тиран. В любом случае, в дело, предложенное им, стоило вникнуть. Я приехал в город на закате…">
+          <Requirements/>
+        </Part>
+      </Text>
+      <Answers>
+        <Answer text="Ок" imageName="imageName">
+          <Pointer>История неожиданно затягивается</Pointer>
+          <Requirements/>
+          <Results/>
+        </Answer>
+      </Answers>
+    </Node>
+	<Node name="Никогда не знаешь, с чём столкнёшься" imageName="imageName">
+      <Text>
+        <Part text="Никогда не знаешь, с чём столкнёшься на этой дороге. Как-то раз поезд атаковала орда призрачных коров …">
+          <Requirements/>
+        </Part>
+      </Text>
+      <Answers>
+        <Answer text="Ок" imageName="imageName">
+          <Pointer>История неожиданно затягивается</Pointer>
+          <Requirements/>
+          <Results/>
+        </Answer>
+      </Answers>
+    </Node>
+	<Node name="Такие таланты не приобретаются просто так" imageName="imageName">
+      <Text>
+        <Part text="Такие таланты не приобретаются просто так. Я не хвастаюсь, пришлось многое пережить, чтобы найти поезд и научиться путешествиям …">
+          <Requirements/>
+        </Part>
+      </Text>
+      <Answers>
+        <Answer text="Ок" imageName="imageName">
+          <Pointer>История неожиданно затягивается</Pointer>
+          <Requirements/>
+          <Results/>
+        </Answer>
+      </Answers>
+    </Node>
+	<Node name="История неожиданно затягивается" imageName="imageName">
+      <Text>
+        <Part text="История неожиданно затягивается. Чем дальше, тем больше подробностей всплывает в памяти. Столько тайн, о которых следовало бы молчать, но которыми так хочется хоть с кем-то поделиться. Наконец, вы обрываете рассказ.@
+Незнакомка, всё это время внимательно слушавшая, кивает головой.\n - Твоя история развлекла меня, путешественник. Выслушай теперь мою.@
+Она рассказывает вам об удивительной сокровищнице, где хранится потерянное время. Даже самые толстые стены не могут удержать его внутри – оно убегает и утекает, но появляется всё новое и новое.@
+Случайный прохожий, открывший сокровищницу, обречён потерять свою жизнь в один миг – он из юноши превратится в древнего старца. Но путник, в чьих руках будет ключ из чёрного камня, сможет забрать время себе.@
+Вернувшись в поезд, вы находите в своей кабине чёрный ключ. Довольно большой и дьявольски холодный. Чем-то недобрым веет от него.">
+          <Requirements/>
+        </Part>
+      </Text>
+      <Answers>
+        <Answer text="Конец." imageName="imageName">
+          <Pointer/>
+          <Requirements/>
+          <Results>
+		    <Result function = "AddGlobalParameter" parameter1 = "gotBlackKey" parameter2 = "1"/>
+		  </Results>
+        </Answer>
+      </Answers>
+    </Node>
+  </Nodes>
+</Quest>

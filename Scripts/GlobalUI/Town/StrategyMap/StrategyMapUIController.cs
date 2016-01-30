@@ -245,7 +245,7 @@ public class StrategyMapUIController : MonoBehaviour {
 					travelTime = potentialTravelTime;
 					potentialTown = null;
 					//currentTown = destinationTown;
-
+					TownController.reference.levelToLoadIndex = IsRoadBetween(currentTown,destinationTown).GetComponent<StrategyMapUIRoad>().roadSceneIndex;
 				}
 			}
 			else

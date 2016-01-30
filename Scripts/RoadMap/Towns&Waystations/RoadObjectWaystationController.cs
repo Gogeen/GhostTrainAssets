@@ -31,4 +31,14 @@ public class RoadObjectWaystationController : MonoBehaviour {
 			}
 		}
 	}
+
+	void Update()
+	{
+		if (QuestsController.globalParameters.ContainsKey ("lostWaystation")) {
+			if (QuestsController.globalParameters ["lostWaystation"] == 2) {
+				QuestsController.globalParameters.Remove ("lostWaystation");
+				Destroy (gameObject);
+			}
+		}
+	}
 }

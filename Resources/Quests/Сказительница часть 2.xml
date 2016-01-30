@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Пишем здесь все параметры, используемые в квесте -->
+
+<!-- Глобальные -->
+<!-- lostWaystation - исчезнет ли полустанок(0-2) - 1-для триггера этого ивента, 2-для пропажи полустанка -->
+<!-- lostLamp - исчезнет ли фонарь(0-1) - 1-для триггера этого ивента -->
+
+<Quest name="Сказительница часть 2">
+  <Settings>
+    <ShowUnavailableAnswers value = "false"/>
+  </Settings>
+  <Requirements>
+    <Requirement function = "Equal" parameter1 = "lostLamp" parameter2 = "1"/>
+	<Requirement type = "or" function = "Equal" parameter1 = "lostWaystation" parameter2 = "1"/>
+  </Requirements>
+  <Nodes>
+    <Node name="Ивент" imageName="wheelBackground">
+      <Text>
+        <Part text="Заглянув в один из вагонов, вы обнаруживаете пропажу фонаря – одного из тех, что складывались в чудесные знаки, способные помочь в дороге и отогнать опасность. На его месте вы обнаруживаете записку «Я возьму этот свет. Он поможет мне отличать правду от лжи.»">
+          <Requirements>
+		    <Requirement function = "Equal" parameter1 = "lostLamp" parameter2 = "1"/>
+		  </Requirements>
+        </Part>
+		<Part text="Полустанок совсем близко. Уже видна небольшая привокзальная площадь и суетящиеся люди. Можно отдохнуть и восстановить запасы.@
+Вдруг дорога перед поездом подёргивается лазурной пеленой и как будто гаснет. Пара мгновений, и туман рассеивается, но впереди теперь только рельсы. Ни малейшего намёка на полустанок и его обитателей, только откуда-то доносится лёгкий звенящий смех.">
+          <Requirements>
+		    <Requirement function = "Equal" parameter1 = "lostWaystation" parameter2 = "1"/>
+		  </Requirements>
+        </Part>
+      </Text>
+      <Answers>
+        <Answer text="Конец" imageName="imageName">
+          <Pointer/>
+          <Requirements>
+		    <Requirement function = "Equal" parameter1 = "lostLamp" parameter2 = "1"/>
+		  </Requirements>
+          <Results>
+		    <Result function = "RemoveItem" parameter1 = "фонарь"/>
+			<Result function = "RemoveGlobalParameter" parameter1 = "lostLamp"/>
+		  </Results>
+        </Answer>
+		<Answer text="Конец" imageName="imageName">
+          <Pointer/>
+          <Requirements>
+		    <Requirement function = "Equal" parameter1 = "lostWaystation" parameter2 = "1"/>
+		  </Requirements>
+          <Results>
+		    <Result function = "IncreaseGlobalParameter" parameter1 = "lostWaystation"/>
+		  </Results>
+        </Answer>
+      </Answers>
+    </Node>
+  </Nodes>
+</Quest>

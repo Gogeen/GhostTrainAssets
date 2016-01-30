@@ -12,6 +12,7 @@ public class MapTextEventController : MonoBehaviour {
 				return;
 			Debug.Log(DialogueController.reference);
 			DialogueSystem.reference.StartQuest(questName);
+			gameObject.SetActive (false);
 		}
 	}
 

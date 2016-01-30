@@ -65,15 +65,12 @@ public class InventoryUI : MonoBehaviour {
 
 	public void PrintStats()
 	{
-		float currentSpeed = PlayerSaveData.reference.trainData.GetCurrentSpeed ();
-		if (PlayerTrain.reference != null) {
-			currentSpeed *= (100 - PlayerTrain.reference.speedDebuffPercent) / 100f;
-		}
-		SpeedStat.value.text = (Mathf.Round(currentSpeed * 10f)/10f).ToString();
+		float maxSpeed = PlayerSaveData.reference.trainData.GetCurrentSpeed();
+		SpeedStat.value.text = (Mathf.Round(maxSpeed * 10f)/10f).ToString();
 
 		float currentPenalty = PlayerSaveData.reference.trainData.GetSpeedPenalty ();
 		if (PlayerTrain.reference != null) {
-			currentPenalty += PlayerSaveData.reference.trainData.GetCurrentSpeed () * (PlayerTrain.reference.speedDebuffPercent / 100f);
+			currentPenalty += maxSpeed * (PlayerTrain.reference.speedDebuffPercent / 100f);
 		}
 		if (currentPenalty > 0)
 		{

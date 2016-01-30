@@ -53,6 +53,7 @@ public class GameController: MonoBehaviour {
 		//lastLoadedSceneIndex = index;
 		//MainCamera.SetActive (false);
 	}
+		
 	/*
 	void LoadLevel(int index)
 	{

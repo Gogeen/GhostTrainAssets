@@ -15,7 +15,9 @@ public class StrategyMapUIRoad : MonoBehaviour {
 
 	public float objectLabelRange;
 	public int roadLength;
-			
+
+	public int roadSceneIndex;
+
 	public List<TravelObject> objects = new List<TravelObject>();
 	public enum TravelObject
 	{

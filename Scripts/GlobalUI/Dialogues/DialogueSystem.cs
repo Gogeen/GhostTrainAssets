@@ -7,7 +7,7 @@ public class DialogueSystem : MonoBehaviour {
 	public static DialogueSystem reference = null;
 	//public string questName;
 	public QuestsController.Quest quest = null;
-    public List<int> log = new List<int>();
+	public List<string[]> log = new List<string[]>();
     public int currentLogIndex;
 
 	public void StartQuest (string questName) {
@@ -20,7 +20,7 @@ public class DialogueSystem : MonoBehaviour {
 			Debug.Log ("Can't pass requirements! quest doesn't start");
 			return;
 		}
-		log = new List<int>();
+		log = new List<string[]>();
         currentLogIndex = 0;
 
 		DialogueController.reference.Activate();

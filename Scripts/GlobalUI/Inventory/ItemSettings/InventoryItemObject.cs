@@ -33,9 +33,10 @@ public class InventoryItemObject : MonoBehaviour {
 			return;
 		RemoveStats ();
 		info.durabilityInfo.current -= value;
-		if (info.durabilityInfo.current < 0) {
+		if (info.durabilityInfo.current <= 0) {
 			info.durabilityInfo.current = 0;
 			ResetEfficiency ();
+			GetComponent<UISprite>().color = Color.red;
 		}
 		//Debug.Log ("breaking "+item.name+" for "+value);
 		ApplyStats();
@@ -78,6 +79,7 @@ public class InventoryItemObject : MonoBehaviour {
 		if (TrainTimeScript.reference.HaveEnoughTime(cost))
 		{
 			info.durabilityInfo.current = info.durabilityInfo.max;
+			GetComponent<UISprite>().color = Color.white;
 			TrainTimeScript.reference.AddTime (-cost);
 		}
 		ApplyStats();
@@ -94,6 +96,9 @@ public class InventoryItemObject : MonoBehaviour {
 		if (TrainTimeScript.reference.HaveEnoughTime(cost))
 		{
 			info.durabilityInfo.current += value;
+			if (info.durabilityInfo.current > 0)
+				GetComponent<UISprite>().color = Color.white;
+			
 			if (info.durabilityInfo.current > info.durabilityInfo.max)
 				info.durabilityInfo.current = info.durabilityInfo.max;
 			TrainTimeScript.reference.AddTime (-cost);

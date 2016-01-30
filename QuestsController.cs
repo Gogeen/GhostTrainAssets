@@ -26,7 +26,6 @@ public class QuestsController : MonoBehaviour {
 
 	void Start()
 	{
-		//Save ("test2.xml");
 		foreach (string name in questFileName) {
 			Load (name+".xml");
 		}
@@ -129,7 +128,14 @@ public class QuestsController : MonoBehaviour {
 	public class QuestSettings
 	{
 		[XmlElement("ShowUnavailableAnswers")]
-		public bool showUnavailableAnswers = false;
+		public ShowUnavailableAnswers showUnavailableAnswers = new ShowUnavailableAnswers();
+	}
+
+	[System.Serializable]
+	public class ShowUnavailableAnswers
+	{
+		[XmlAttribute("value")]
+		public bool value = false;
 	}
 
 	[System.Serializable]
@@ -234,7 +240,9 @@ public class QuestsController : MonoBehaviour {
 		IncreaseGlobalParameter,
 		DecreaseGlobalParameter,
 		AddItem,
-		RemoveItem
+		RemoveItem,
+		AddTime,
+		RemoveTime
 	}
 
 	int GetParameterValue(string parameter)
@@ -339,6 +347,10 @@ public class QuestsController : MonoBehaviour {
 		case Functions.RemoveGlobalParameter:	{RemoveGlobalParameter (result.p1);								break;}
 		case Functions.IncreaseGlobalParameter:	{IncreaseGlobalParameter (result.p1);							break;}
 		case Functions.DecreaseGlobalParameter:	{DecreaseGlobalParameter (result.p1);							break;}
+		case Functions.AddItem:					{AddItem (result.p1);											break;}
+		case Functions.RemoveItem:				{RemoveItem (result.p1);										break;}
+		case Functions.AddTime:					{AddTime (GetParameterValue(result.p1));						break;}
+		case Functions.RemoveTime:				{RemoveTime (GetParameterValue(result.p1));						break;}
 		default: {Debug.Log("unexpected function name in results in xml!"); break;}
 		}
 
@@ -414,5 +426,27 @@ public class QuestsController : MonoBehaviour {
 			return;
 		}
 		globalParameters[key] -= 1;
+	}
+
+	void AddItem(string name)
+	{
+		InventorySystem.reference.InitItem(ItemDatabase.reference.FindByName (name), InventorySystem.SlotType.Wagon);
+	}
+
+	void RemoveItem(string name)
+	{
+		InventoryItemObject item = InventorySystem.reference.FindItem (name);
+		if (item != null)
+			Destroy(item.gameObject);
+	}
+
+	void AddTime(int value)
+	{
+		PlayerSaveData.reference.time.minutes += value;
+	}
+
+	void RemoveTime(int value)
+	{
+		PlayerSaveData.reference.time.minutes -= value;
 	}
 }

@@ -17,6 +17,12 @@ public class DialogueController : MonoBehaviour {
 	
 	public GameObject answerButtonsGrid;
 
+	void PrepareNodeInfo(QuestsController.QuestNode node)
+	{
+		SetTextToShow (node);
+		SetSpriteToShow(node);
+	}
+
 	public void Activate()
 	{
 		quest = DialogueSystem.reference.quest;
@@ -31,7 +37,8 @@ public class DialogueController : MonoBehaviour {
 		action = new EventDelegate(this, "FlipLogForward");
 		EventDelegate.Add(logForwardButton.GetComponent<UIButton>().onClick, action);
 
-		UpdateUI(currentNode);
+		PrepareNodeInfo (currentNode);
+		UpdateUI();
 
 	}
 	
@@ -50,14 +57,14 @@ public class DialogueController : MonoBehaviour {
 
 	public void FlipLogBack()
 	{
-		DialogueSystem.reference.currentLogIndex -= 2;
-		//UpdateUI(DialogueSystem.reference.currentNodeIndex);
+		DialogueSystem.reference.currentLogIndex -= 1;
+		UpdateUI ();
 	}
 	
 	public void FlipLogForward()
 	{
-		DialogueSystem.reference.currentLogIndex += 2;
-		//UpdateUI(DialogueSystem.reference.currentNodeIndex);
+		DialogueSystem.reference.currentLogIndex += 1;
+		UpdateUI ();
 	}
 
 	GameObject GenerateAnswerButton(string text, string imageName, int index)
@@ -79,7 +86,7 @@ public class DialogueController : MonoBehaviour {
 		for (int childIndex = 0; childIndex < answersCount; childIndex++)
 		{
 			QuestsController.Answer answer = node.answers [childIndex];
-			if (!quest.settings.showUnavailableAnswers){
+			if (!quest.settings.showUnavailableAnswers.value){
 				if (!QuestsController.IsPassRequirements(answer)){
 					continue;
 				}
@@ -89,7 +96,7 @@ public class DialogueController : MonoBehaviour {
 			EventDelegate action = new EventDelegate(this, "SelectAnswer");
 			action.parameters[0].value = answer;
 			EventDelegate.Add(button.GetComponent<UIButton>().onClick, action);
-			if (quest.settings.showUnavailableAnswers){
+			if (quest.settings.showUnavailableAnswers.value){
 				if (!QuestsController.IsPassRequirements(answer)){
 					Destroy(button.GetComponent<BoxCollider>());
 				}
@@ -100,6 +107,9 @@ public class DialogueController : MonoBehaviour {
 
 	public void SelectAnswer(QuestsController.Answer answer)
 	{
+		DialogueSystem.reference.log.Add (new string[]{AITextLabel.text, AISprite.spriteName, answer.text});
+		DialogueSystem.reference.currentLogIndex += 1;
+
 		QuestsController.ApplyResults (answer);
 
 		QuestsController.QuestNode nextNode = QuestsController.FindNode (quest, answer.pointer);
@@ -109,23 +119,12 @@ public class DialogueController : MonoBehaviour {
 			return;
 		}
 		currentNode = nextNode;
-		UpdateUI(currentNode);
+		PrepareNodeInfo (currentNode);
+		UpdateUI();
 	}
 
-	public void UpdateUI(QuestsController.QuestNode node)
+	public void Continue(bool writeLog = false)
 	{
-		
-		/*if (DialogueSystem.reference.currentLogIndex > 0)
-			logBackButton.SetActive(true);
-		else
-			logBackButton.SetActive(false);
-		*/
-
-		for (int childIndex = answerButtonsGrid.transform.childCount - 1; childIndex >= 0; childIndex--)
-		{
-			Destroy(answerButtonsGrid.transform.GetChild(childIndex).gameObject);
-		}
-
 		/*
 		если текст слишком длинный, его надо разбить на несколько кусков
 		берем первый кусок, оставшееся сохраняем
@@ -133,56 +132,114 @@ public class DialogueController : MonoBehaviour {
 		повторяем эти действия, пока не останется текста для показа.
 		когда его не останется, показываем варианты ответа как обычно.
 		*/
-		
+		if (writeLog) {
+			DialogueSystem.reference.log.Add (new string[]{AITextLabel.text, AISprite.spriteName, "Далее" });
+			DialogueSystem.reference.currentLogIndex += 1;
+		}
+			
+		UpdateTextToShow ();
+
+		UpdateUI ();
+	}
+
+	string textToShow = "";
+	string spriteToShow = "";
+	void SetTextToShow(QuestsController.QuestNode node)
+	{
+		textToShow = "";
+		foreach (QuestsController.TextPart part in node.textParts) {
+			if (QuestsController.IsPassRequirements (part)) {
+				textToShow += part.text;
+			}
+		}
+		textToShow = textToShow.Replace("\\n", "\n");
+	}
+
+	void UpdateTextToShow()
+	{
+		if (textToShow.Contains ("@"))
+			textToShow = textToShow.Substring (textToShow.IndexOf ('@') + 1);
+		else
+			textToShow = "";
+	}
+
+	string GetTextToShow()
+	{
+		string textPartToShow = "";
+		for (int charIndex = 0; charIndex < textToShow.Length; charIndex++) {
+			if (textToShow [charIndex] == '@') {
+				// draw text and repeat
+				//textToShow.CopyTo (0, textPartToShow, 0, charIndex + 1);
+				break;
+			} else {
+				textPartToShow += textToShow [charIndex];
+			}
+			//textPartToShow += textToShow[charIndex];
+		}
+		return textPartToShow;
+	}
+
+	bool WillHaveTextToShow()
+	{
+		if (!textToShow.Contains ("@"))
+			return false;
+		return true;
+	}
+
+	void SetSpriteToShow(QuestsController.QuestNode node)
+	{
+		spriteToShow = node.imageName;
+	}
+
+	string GetSpriteToShow()
+	{
+		return spriteToShow;
+	}
+
+	public void UpdateUI()
+	{
+		for (int childIndex = answerButtonsGrid.transform.childCount - 1; childIndex >= 0; childIndex--)
+		{
+			Destroy(answerButtonsGrid.transform.GetChild(childIndex).gameObject);
+		}
+
+		if (DialogueSystem.reference.currentLogIndex > 0)
+			logBackButton.SetActive(true);
+		else
+			logBackButton.SetActive(false);
+
 		if (DialogueSystem.reference.currentLogIndex >= DialogueSystem.reference.log.Count)
 		{
 			logForwardButton.SetActive(false);
 			logAnswerLabel.gameObject.SetActive(false);
 
-			string textToShow = "";
-			foreach (QuestsController.TextPart part in node.textParts) {
-				if (QuestsController.IsPassRequirements (part)) {
-					textToShow += part.text;
-				}
-					
-			}
-			//AITextLabel.text = quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetText();
-			//if (quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetResultIndex() != quest.zeroResultIndex)
-			//	AITextLabel.text += "\n\n" + quest.FindResultNode(quest.FindAINode(DialogueSystem.reference.currentNodeIndex).GetResultIndex()).GetText();
-			AISprite.spriteName = node.imageName;
-			AITextLabel.text = textToShow;
-			/*
-			string textPartToShow = "";
-			while (textToShow != "") {
-				for (int charIndex = 0; charIndex < textToShow.Length; charIndex++) {
-					if (textToShow[charIndex] == '@') {
-						// draw text and repeat
-						textPartToShow = "";
-						textToShow.CopyTo(0,textPartToShow,0,charIndex+1);
-						textToShow.Remove (0, charIndex+1);
-						break;
-					}
-					//textPartToShow += textToShow[charIndex];
-				}
-			}
-			GameObject button = GenerateAnswerButton(answer.text, answer.imageName,indexInHierarchy);
-			indexInHierarchy += 1;
-			EventDelegate action = new EventDelegate(this, "SelectAnswer");
-			action.parameters[0].value = answer;
-			EventDelegate.Add(button.GetComponent<UIButton>().onClick, action);
-			*/
 
-			DrawAnswerButtons(node);
+			AITextLabel.text = GetTextToShow();
+			AISprite.spriteName = GetSpriteToShow ();
+
+			if (WillHaveTextToShow()) {
+				GameObject button = GenerateAnswerButton ("Далее", "", 0);
+				EventDelegate action = new EventDelegate (this, "Continue");
+				action.parameters[0].value = true;
+				EventDelegate.Add (button.GetComponent<UIButton> ().onClick, action);
+				answerButtonsGrid.GetComponent<UIGrid>().Reposition();
+			} else {
+				DrawAnswerButtons(currentNode);
+			}
 		}
 		else
 		{
-			/*
 			logForwardButton.SetActive(true);
-			AITextLabel.text = quest.FindAINode(DialogueSystem.reference.log[DialogueSystem.reference.currentLogIndex]).GetText();
-			AISprite.spriteName = quest.FindAINode(DialogueSystem.reference.log[DialogueSystem.reference.currentLogIndex]).GetSprite();
 			logAnswerLabel.gameObject.SetActive(true);
-			logAnswerLabel.text = quest.FindAINode(DialogueSystem.reference.log[DialogueSystem.reference.currentLogIndex]).GetAnswer(DialogueSystem.reference.log[DialogueSystem.reference.currentLogIndex + 1]).GetText();
-			*/
+			AITextLabel.text = DialogueSystem.reference.log [DialogueSystem.reference.currentLogIndex][0]; 
+			AISprite.spriteName = DialogueSystem.reference.log [DialogueSystem.reference.currentLogIndex][1];
+			logAnswerLabel.text = DialogueSystem.reference.log [DialogueSystem.reference.currentLogIndex][2];
+
 		}
+	}
+
+	void Update()
+	{
+		
 	}
 }

@@ -84,5 +84,28 @@ public class TrainEventManager : MonoBehaviour {
 				}
 			}
 		}
+
+		if (Input.GetKeyDown ("q")) {
+			if (CanUseGhostMode ())
+				UseGhostMode ();
+		}
+		if (Input.GetKeyDown ("w")) {
+			if (GetComponent<SignsController> ().CanCast (PlayerTrain.reference.GetWagon(1).signType)) {
+				PlayerTrain.reference.GetWagon(1).GetComponent<Animator> ().Play ("wagonAnim");
+				PlayerTrain.reference.GetWagon(1).CastSign ();
+			}
+		}
+		if (Input.GetKeyDown ("e")) {
+			if (GetComponent<SignsController> ().CanCast (PlayerTrain.reference.GetWagon(2).signType)) {
+				PlayerTrain.reference.GetWagon(2).GetComponent<Animator> ().Play ("wagonAnim");
+				PlayerTrain.reference.GetWagon(2).CastSign ();
+			}
+		}
+		if (Input.GetKeyDown ("r")) {
+			if (GetComponent<SignsController> ().CanCast (PlayerTrain.reference.GetWagon(3).signType)) {
+				PlayerTrain.reference.GetWagon(3).GetComponent<Animator> ().Play ("wagonAnim");
+				PlayerTrain.reference.GetWagon(3).CastSign ();
+			}
+		}
 	}
 }
